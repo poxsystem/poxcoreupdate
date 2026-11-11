@@ -1,0 +1,799 @@
+============================================================
+  ACTUALIZACIÓN DE POXSCORE  ·  3 de noviembre de 2026
+============================================================
+
+Esta carpeta actualiza una instalación existente de PoxScore
+SIN TOCAR LOS DATOS (los datos viven en MySQL, no en estas
+carpetas — la base de datos NO se borra ni se sobreescribe).
+
+QUÉ TRAE ESTA ACTUALIZACIÓN  (versión 2026-11-03.32)
+---------------------------
+- DECISIONES W/L YA SALEN AL CERRAR TEMPRANO: al finalizar
+  un juego antes de tiempo (nocaut en la 4ª, por ejemplo),
+  los selectores de pitcher ganador y derrotado salían
+  vacíos — la pantalla de cierre leía una lista de jugadas
+  vieja y no veía a los lanzadores de esa sesión. Había que
+  salir a la planilla y volver para que aparecieran. Ya
+  toma las jugadas en vivo, sin trucos.
+- ANOTAR EN UNA CASILLA TAMBIÉN EN MODO AL VUELO: en la
+  transcripción por hoja (botón ⚡ Al vuelo), la opción
+  "Anotar en esta casilla" (clic derecho / Alt+clic)
+  aparecía gris. Ya funciona — ideal para retroceder a
+  una casilla que faltó sin salir del modo.
+- CORREGIR JUGADOR EQUIVOCADO YA MUEVE LA TEMPORADA: al
+  cambiar un jugador por otro en Auditoría (ej. un lanzador
+  anotado por error), los números ahora también se restan de
+  su ficha de temporada y se suman a la del jugador correcto
+  — antes solo se corregía el juego y el acumulado quedaba
+  con el equivocado.
+- CORREGIR LANZADOR ENTRADO POR CAMBIO DE PITCHER: el
+  selector "Erróneo" ya ofrece a quienes solo aparecen en
+  las jugadas (un relevista por PC puede no tener fila en
+  la alineación) — antes no se podía ni seleccionar.
+- DECISIONES Y LÍNEA MANUAL EN MODO ABIERTO: sin usuarios
+  creados, "Guardar decisiones" y "Jugador que estuvo y no
+  se anotó" rechazaban con "Requiere rol admin" — ya no.
+- Jugadores solo presentes en jugadas (fuera de lineup y de
+  roster, p.ej. transferidos) salen ahora con su nombre en
+  Auditoría en vez de "—".
+- RECALCULAR ACUMULADOS DE TEMPORADA: botón ♻️ junto al
+  selector de temporada — reconstruye las fichas
+  PlayerSeasonStat del año leyendo los juegos desde cero.
+  Repara cualquier desfase (stats que quedaron viejas por
+  correcciones previas a la resincronización); los ajustes
+  manuales (✏️ editar temporada) se conservan.
+- PITCHER SIN ALINEACIÓN: al elegir un lanzador que no está
+  en el lineup, pregunta si agregarlo como SUB — antes
+  quedaba "solo en jugadas" (sin fila en la planilla y la
+  auditoría ni lo listaba para corregirlo).
+- MVP CON PREMIO A LOS LÍDERES: el puntaje ahora es
+  Puntos MVP = WAR ofensivo + WAR de pitcheo + 1.0 por cada
+  departamento que el jugador lidere (los empates cuentan).
+  La tabla de candidatos muestra el WAR, los departamentos
+  que lidera cada uno y el puntaje final.
+- LÍDERES / MVP / REPORTES USAN SIEMPRE LA TEMPORADA VIGENTE
+  REGULAR: antes la hoja tomaba los datos de lo que estuviera
+  seleccionado en pantalla — si veías "Histórico" o la fase de
+  playoffs, salían números de otros años o de postemporada
+  (datos fantasma). Ahora la hoja carga por su cuenta:
+  temporada activa (o la más reciente), solo juegos de
+  temporada regular. Los jugadores que cambiaron de equipo en
+  el año siguen sumando sus números juntos, como corresponde.
+- HOJA DE REPORTES (🏅 líderes, 🏆 MVP, 📄 reportes) YA SE
+  CIERRA: el botón "✕ Cerrar" quedaba negro sobre la barra
+  negra (invisible) — ahora es blanco; además se cierra con
+  la tecla Esc o tocando el fondo oscuro, y en pantallas
+  angostas los botones ya no se salen del borde.
+
+  --- entregas anteriores ---
+- ACTUALIZAR.BAT CORREGIDO: antes solo mataba el proceso del
+  puerto 4000, pero el launcher (PoxScore.exe / launcher.mjs)
+  lo RESUCITABA en 3 segundos — el "server que no muere".
+  Ahora detiene primero el launcher (panel + launcher.pid),
+  luego el server, y verifica que el puerto quedó libre.
+  También borra los bundles viejos acumulados y al final
+  muestra la versión/bundle exactos que debe dar /api/health.
+- 3er OUT FORZADO con bases llenas: la carrera que "pisa"
+  home no cuenta. Ya lo hacían el marcador y el boxscore —
+  faltaba el linescore por entradas y el resumen de entrada,
+  que la seguían mostrando.
+- AUDITORÍA: editor de corredores por jugada (quitar "ANOTÓ",
+  opción NA = no avanza), recorte automático de jugadas
+  sobrantes después del final real, el marcador auditado
+  manda sobre el fScore digitado a mano, y al cambiar el
+  resultado de una jugada los avances se regeneran solos.
+- LIMPIEZA DE ROSTERS ABULTADOS POR IMPORT VIEJO: si una
+  temporada vieja se importó antes de la regla de jugadores
+  pasivos, sus jugadores quedaron ACTIVOS e inflan el roster
+  del año vigente. Script nuevo: server\scripts\mark-passive.ts
+  → npx tsx scripts/mark-passive.ts "Mi Liga" lista quién no
+  jugó la temporada vigente (vista previa, no toca nada) y con
+  --apply los pasa a PASIVOS conservando stats e historial.
+- MOVER JUGADOR SE QUEDA EN SU LIGA: el selector de "Cambiar
+  equipo" (tarjeta del jugador y ficha del equipo), el refuerzo
+  de otro equipo en lineup/sustitución y "Incorporar pasivo" ya
+  NO despliegan equipos/fichas de TODAS las ligas — solo los de
+  la liga del equipo/jugador actual. Se acabó el caos de mezclar
+  torneos.
+- HIT + ERROR EN LA MISMA PANTALLA (corregido): ya no hay una
+  segunda pantalla escondida para el error. Al confirmar un
+  hit, el selector "¿Pasó algo más?" trae un 4to chip "⚠ error"
+  junto a los de atrapado: tocas error → eliges hasta dónde
+  llegó el bateador por el error (2ª/3ª/home) → y la jugada NO
+  se puede grabar sin poner quién erró (ej. E9). Sale la
+  jugada completa de una vez: hit acreditado + error cargado.
+- ATRAPADO ESTIRANDO AHORA EXIGE LA COMBINACIÓN: antes podías
+  marcar "out a 2ª" y confirmar sin escribir el cómo — el out
+  quedaba sin PO ni asistencia. Ahora, con un chip de atrapado
+  marcado, el botón Confirmar no se activa hasta escribir la
+  combinación defensiva (ej. 9-4). Los 3 chips de estirando
+  se achicaron para que quepan los 4 en una línea.
+- BOTONERA REORGANIZADA POR SEMEJANZA: ahora son 4 grupos —
+  HIT (hits + hit de cuadro + pasaportes BB/IBB/HBP + fly de
+  sacrificio), OUT (ponches, outs de batazo,
+  sacrificios, doble/triple play, jugadas raras), EMBASA
+  (selección, forzado, error, interferencia) y EN BASE.
+- EN BASE — DIAMANTE INTERACTIVO: botón nuevo en la botonera.
+  Tocas al corredor, luego su destino (base/home/out) y eliges
+  el motivo: robo, out robando, wild pitch, passed ball, balk,
+  pickoff o indiferencia defensiva. No deja mandar a una base
+  ocupada por otro corredor.
+- FORCE OUT Y FIELDER'S CHOICE separados: "Selección (FC)" =
+  pudo ser out pero tiraron a otra base (todos a salvo);
+  "Forzado (FC)" = el bateador se embasa pero el compañero cae
+  out forzado — su fila ya viene en OUT y solo anotas el cómo
+  (ej. 4-6). Si marcas 2 outs se convierte en doble play solo.
+- ATRAPADO ESTIRANDO: al confirmar un hit aparece el selector
+  "¿Lo atraparon estirando?" → out a 2ª/3ª/home. El hit queda
+  acreditado y anotas la combinación defensiva (ej. 9-4).
+- HIT DE CUADRO: opción nueva dentro de HIT — ya trae la
+  trayectoria de rola marcada.
+- AVANCE EN DOBLE CORREGIDO: el corredor de 1ª llega a 3ª por
+  defecto (antes todos anotaban automáticamente).
+- TOGGLE DE AUDIO 🎙: botón junto a Voz/Mic que apaga el panel
+  de audio completo — anotación táctil sin interferencias
+  (queda guardado para la próxima vez).
+- ANOTAR SIN ALINEACIÓN: el juego puede arrancar sin lineups —
+  cada bateador se agrega al orden al llegar a la caja (botón
+  "＋ Bateador al plato" o desde ⚙ Especial). Cuando el orden
+  da la vuelta tocas 🔁 y sigue solo. También puedes agregar
+  fildeadores del equipo defensor por el mismo camino.
+- JUGADORES PASIVOS: al importar una temporada ATRASADA, los
+  jugadores nuevos ya NO inflan el roster actual — nacen
+  pasivos en el equipo de ese año. Si el jugador vuelve a
+  aparecer en la temporada vigente se reactiva solo. El que
+  matchea solo suma números y conserva su equipo actual.
+- PANTALLA "JUGADORES PASIVOS": en la ficha del equipo, sección
+  colapsable con todos los dados de baja (✓ reactivar). El
+  roster y su PDF muestran solo activos. Botón "＋ Incorporar
+  pasivo" busca fichas BAJA de todo el sistema y las trae
+  activas al equipo — así activas a alguien del 2021 a un
+  equipo actual. En la tarjeta del jugador, "Cambiar equipo"
+  reactiva al mover un BAJA. Y con los checkbox del roster
+  puedes dar de baja por lote.
+- CONVERSOR BallStat: lee Rosters/*.ros (roster nativo binario)
+  para nombres completos aunque falte el WebBuilder; acepta
+  filenames de dobleheader con sufijo a/b (11-12-23a.box.txt);
+  detecta la postemporada por calendario (en post solo juegan
+  2 equipos/día) y por nombre de base (SEMIFINAL25/FINAL25).
+- Modal de importación más grande (tabla de matching cómoda,
+  buscador usable, lista más alta).
+- Auditoría general: cola de eventos sin fuga de memoria, índices
+  en las rutas calientes, 0 jugadas duplicadas en la base.
+
+Verifica tras actualizar: http://localhost:4000/api/health →
+"v":"2026-10-13.30" y "build":"index-Dr_E9DTs.js".
+
+LO QUE TRAÍA LA VERSIÓN ANTERIOR (2026-10-10.25)
+---------------------------
+- POSTEMPORADA DETECTADA EN IMPORTACIONES: los boxscores de
+  BallScore no dicen "playoff", pero el récord (G-P) del
+  encabezado se REINICIA al arrancar series (ej. 33-23 → 1-1).
+  El conversor detecta ese reinicio, agrupa las series por
+  pareja (Semifinal / Final / Ronda N) y las importa como
+  postemporada: bracket del website, stats POST separadas en
+  la tarjeta del jugador y campeón de la serie.
+- AGREGAR TEMPORADA A UNA LIGA EXISTENTE: en 📥 Importar, tras
+  analizar el ZIP puedes elegir "Agregar como temporada a «Mi
+  Liga»" — el nombre de liga del ZIP ya no manda (varía por
+  técnico). Con 🔗 Fundir, el mismo jugador en varios equipos
+  queda en UNA ficha (equipo del último juego por fecha, stats
+  sumadas y desglose por equipo). Si el año ya existe, la
+  opción ♻️ Reemplazar lo borra y re-importa sin duplicar.
+- CAMBIO DE APELLIDO ENTRE AÑOS (Wilkin Arias → Wilkin Colon):
+  la vista previa del append muestra cada nombre sin ficha con
+  candidatos sugeridos — eliges a dónde van los números con un
+  select por equipo (nuevo jugador o ficha existente).
+- Script server\scripts\fixpost-imported.ts: marca la
+  postemporada en ligas YA importadas que quedaron sin series
+  (crea las Series, marca los juegos y separa los acumulados
+  REG/POST). Uso: npx tsx scripts\fixpost-imported.ts
+- IMPORTACIÓN .BOX.TXT ARREGLADA DE RAÍZ: los archivos que
+  Win11 exporta "desordenados" (RTF con filas cortadas a
+  ~120 columnas — el nombre en una línea y los números en
+  otra) ahora se RE-ENSAMBLAN y RE-FORMATEAN por dentro al
+  importar. Ya no salen filas fantasma "P" ni "c 1b 2b s1":
+  RAMOS recupera su posición y stats, ALCANTARA aparece como
+  pitcher, el bloque de pitcheo duplicado se deduplica.
+- Apellidos AMBIGUOS se marcan en la revisión (no se adivina
+  en silencio) y los picks manuales se APRENDEN por lote:
+  eliges "RAMOS → Willy Ramos" una vez y se aplica a todos
+  los .box.txt del lote con el mismo equipo+apellido.
+- Fila "P" a secas (pitcher bateando sin nombre): si el
+  equipo trae UN solo lanzador se auto-asigna a él; con
+  varios, se listan para elegir.
+- Script nuevo server\scripts\fmt-box.ts: convierte .box.txt
+  RTF desordenados a .txt alineados estilo bloc de notas
+  (npx tsx scripts/fmt-box.ts <carpeta-salida> <archivos>).
+- NOTA: la app sigue en modo abierto (sin login) — el candado
+  solo pide la clave admin (admin123) para borrar/bloquear.
+  Si quieren usuarios, se crean en /usuarios (el primero
+  nace admin y queda logueado solo).
+- ACTUALIZAR.bat ahora DETECTA si el server sigue corriendo
+  al empezar (puerto 4000 ocupado) y ofrece detenerlo — antes
+  el prisma generate fallaba con "EPERM ... query_engine" si
+  PoxScore quedaba encendido. Si el generate falla igual, el
+  bat reintenta solo a los 5 segundos.
+- IMPORTANTE al aplicar: después de correr este bat, DETEN
+  el servidor si seguía corriendo y vuélvelo a iniciar.
+  Verifica http://localhost:4000/api/health → "build".
+
+- CONVERSIÓN SIN WEBBUILDER: un ZIP con solo "BallScore Reports"
+  (.box.txt + .cmp.txt) ahora convierte completo — fichas por
+  apellido, decisiones W/L/SV desde el bloque de pitcheo, y
+  series Semifinal/Final detectadas por calendario (en post solo
+  juegan 2 equipos/día; en regular los 3). Los apellidos
+  ambiguos se asignan a mano en la vista previa con el buscador.
+- FUSIONAR TEMPORADA: para bases partidas («2025» + «2025 B»)
+  — al anexar, si el año ya existe puedes FUSIONAR: agrega los
+  juegos sin borrar nada y salta los repetidos por fecha+equipos.
+- Buscador en la tabla de matching: cada nombre sin ficha tiene
+  lupa que filtra todo el roster con tolerancia a errores
+  ("jhonny turby" encuentra "Jonny Turbi").
+
+LO QUE YA TRAÍA LA VERSIÓN ANTERIOR (misma serie 2026-10-10.25)
+---------------------------
+- LA APP YA NO SE QUEDA VIEJA: el service worker (PWA)
+  guardaba el diseño anterior aunque actualizaras. Ahora la
+  app sola detecta el build nuevo (/api/health trae "build")
+  y se recarga UNA vez — sin Ctrl+F5 ni borrar caché. ESTA
+  VEZ sí hay que refrescar a mano UNA última vez.
+- LAUNCHER DE UNA SOLA VENTANA: "Abrir PoxScore" ya no abre
+  3-4 ventanas — si la app está abierta solo la trae al
+  frente. El panel no se "congela" al abrir (va en hilo
+  aparte). Menú de bandeja nuevo: "Abrir en otra ventana"
+  para una 2ª pantalla a propósito (pantalla pública/OBS).
+  Al Detener el servidor se cierra la ventana de la app.
+- UNA SOLA PESTAÑA ANOTANDO: si el mismo juego se abre en
+  dos pestañas, la anterior queda bloqueada con aviso —
+  no más jugadas duplicadas ni relojes peleados.
+- IMPORTANTE al aplicar: después de correr este bat, DETEN
+  el servidor si seguía corriendo y vuélvelo a iniciar
+  (el código viejo queda en memoria). Verifica:
+  http://localhost:4000/api/health → "build":"index-Dr_E9DTs.js"
+
+LO QUE YA TRAÍA LA VERSIÓN ANTERIOR (2026-10-10.24)
+---------------------------
+- LA APP YA NO SE QUEDA VIEJA: el service worker (PWA)
+  guardaba el diseño anterior aunque actualizaras. Ahora la
+  app sola detecta el build nuevo (/api/health trae "build")
+  y se recarga UNA vez — sin Ctrl+F5 ni borrar caché. ESTA
+  VEZ sí hay que refrescar a mano UNA última vez.
+- LAUNCHER DE UNA SOLA VENTANA: "Abrir PoxScore" ya no abre
+  3-4 ventanas — si la app está abierta solo la trae al
+  frente. El panel no se "congela" al abrir (va en hilo
+  aparte). Menú de bandeja nuevo: "Abrir en otra ventana"
+  para una 2ª pantalla a propósito (pantalla pública/OBS).
+  Al Detener el servidor se cierra la ventana de la app.
+- UNA SOLA PESTAÑA ANOTANDO: si el mismo juego se abre en
+  dos pestañas, la anterior queda bloqueada con aviso —
+  no más jugadas duplicadas ni relojes peleados.
+- IMPORTANTE al aplicar: después de correr este bat, DETEN
+  el servidor si seguía corriendo y vuélvelo a iniciar
+  (el código viejo queda en memoria). Verifica:
+  http://localhost:4000/api/health → "build":"index-Dr_E9DTs.js"
+
+LO QUE YA TRAÍA LA VERSIÓN ANTERIOR (2026-10-10.24)
+---------------------------
+- COLA DE JUGADAS VISIBLE: la píldora "N jugadas en cola" de
+  la planilla ahora se abre — lista cada jugada pendiente
+  (resultado, entrada, hora) con botones "Reintentar ahora"
+  y "Vaciar cola". Si el server se cayó con jugadas sin
+  subir, aquí las recuperas o las limpias.
+- BOTÓN RESINCRONIZAR 🔄 en la planilla: recarga el juego
+  completo del servidor y sube la cola — útil si el reloj o
+  el marcador se ven raros. El reloj además se PAUSA (⏸) en
+  juegos suspendidos.
+- EDITAR FECHA EN JUEGO EN CURSO: botón ✏️ junto a la fecha
+  en la página del juego — corrige fecha, estadio y
+  ampáyers aunque el juego ya esté anotándose (antes solo
+  se podía al iniciar).
+- GUARDAR PLANTILLA DE ALINEACIÓN reparado: el botón 💾
+  fallaba en silencio para anotadores (pedía rol admin).
+  Ahora dice "💾 Guardar plantilla" / "📂 Cargar plantilla"
+  en AMBOS equipos y funciona con rol anotador.
+- CLAVE OPENAI DESDE LA APP: 🎤 Voz → ⚙️ Micrófono → campo
+  "Clave OpenAI" guarda la clave en server\.env y activa la
+  IA sin reiniciar.
+- ★ CORRECCIÓN CRÍTICA — el server se caía al anotar jugadas:
+  si una actualización anterior se aplicó sin regenerar el
+  cliente Prisma, cada jugada lanzaba "Unknown argument
+  'aiVoice'" y el proceso se cerraba (la app se desconectaba
+  del servidor cada vez). ESTA ACTUALIZACIÓN LO RESUELVE:
+  ACTUALIZAR.bat ahora corre `prisma generate` además de
+  `db push`, y el servidor ya no se cae aunque falle una
+  escritura (los campos de IA solo se envían con datos y los
+  guardados opcionales están protegidos). Las jugadas por voz
+  también fallaban por esta misma causa — al confirmar, el
+  server moría antes de grabar.
+- LAUNCHER CON AUTO-REINICIO: si el servidor crashea, el icono
+  de la bandeja lo levanta solo a los 3 segundos (hasta 5
+  fallos seguidos; luego se detiene para no reiniciar en
+  bucle — ver launcher\server.log). OJO: para activar esto hay
+  que salir del launcher (icono → Salir) y abrirlo de nuevo
+  después de actualizar, porque el viejo queda en memoria.
+- 7 MÓDULOS DE INTELIGENCIA ARTIFICIAL en la anotación:
+  1) 🎤 ANOTAR POR VOZ — botón "Voz" en la planilla: dicta la
+     jugada en dominicano ("rolling por segunda", "se fue por
+     el left", "ponche tirándole", "base por bola") → la IA la
+     convierte a notación oficial → Confirmar / Corregir.
+     Al abrir el modal pide permiso y empieza a escuchar;
+     el botón ⚙️ Micrófono permite elegir la entrada de audio.
+     OJO: el micrófono solo funciona en localhost o con HTTPS —
+     desde otra PC por IP (http://192.168.x.x) el navegador lo
+     bloquea; ahí queda el dictado escrito. Sin Speech API en el
+     navegador, graba y transcribe por Whisper (necesita clave).
+     La clave OpenAI se configura desde la app: 🎤 Voz →
+     ⚙️ Micrófono → campo "Clave OpenAI" (se guarda sola en
+     server\.env y activa la IA sin reiniciar).
+  2) 📹 VIDEO — botón "Video": asistente que sugiere la jugada
+     detectada con % de confianza (MVP simulado; se guarda el
+     análisis en el evento, campo aiVideo).
+  3) 🗣 NARRADOR AUTOMÁTICO — tras cada jugada importante, una
+     frase estilo narrador dominicano aparece en pantalla y en
+     la vista pública /en-vivo. Botón 🔊 activa lectura por voz.
+  4) 📋 JUGADA A JUGADA — botón en la página del juego: genera
+     el texto play-by-play completo + boxscore oficial y lo
+     guarda en el juego (listo para copiar/imprimir).
+  5) 📊 STATS EN VIVO — botón "Stats" en la planilla:
+     probabilidad de ganar, números del bateador con corredores
+     en posición y vs el pitcher actual, conteo de lanzamientos
+     y un consejo táctico (con OpenAI; sin clave da alertas
+     locales, ej. "85 lanzamientos — considera el relevo").
+  6) ⚠ VALIDADOR DE ANOTACIÓN — antes de grabar cada jugada
+     revisa la lógica: doble play sin corredores, carreras sin
+     nadie en base, más de 3 outs, sacrificio sin corredor en
+     3ra... Si algo no cuadra pregunta antes de grabar.
+  7) 📣 COMPARTIR RESULTADO — al terminar el juego (FINAL):
+     resumen automático para redes, 3 titulares, MVP con su
+     línea, texto listo para WhatsApp/Facebook, Web Share en
+     el teléfono y TARJETA MVP PNG vertical con foto.
+  NOTA: sin OPENAI_API_KEY todo funciona con respaldo local
+  (diccionario dominicano y textos propios). Con la clave en
+  server/.env las respuestas las genera GPT-4o.
+- ASISTENTE DE CONSULTAS 🤖 — botón en la barra de arriba:
+  pregúntale en dominicano sobre los datos del sistema:
+  "¿quién tiene más dobles entre Ulises Herrera y Juan Colón?",
+  "¿cuánto batea Pedro?", "¿cuántos jonrones tiene Rafael?".
+  AHORA CON FILTROS SITUACIONALES — re-simula las jugadas y
+  responde con números reales de cada situación:
+    "¿cómo batea Camacho con hombres en posición de anotar?"
+    "¿cuánto le batea Flores al pitcher Francisco Paredes?"
+    "¿cuánto batea con corredor en segunda y dos outs?"
+    "¿quién batea más con bases llenas, X o Y?"
+    "¿cuánto batea Manuel siendo 4to bate?"
+    "¿cómo ha estado Ríos en sus últimos 3 juegos?"
+    "¿cuál es el BABIP de Herrera?"
+  Sabermetría: AVG, OBP, SLG, OPS, ISO, BABIP, wOBA, WHIP,
+  BB%, K%. Cada nombre lleva a su tarjeta; el filtro usado se
+  muestra en una etiqueta azul. Con OPENAI_API_KEY la respuesta
+  sale redactada por GPT-4o; sin clave usa plantillas locales.
+- PLANILLA — MENÚ CON CLIC DERECHO: en la planilla del juego,
+  clic DERECHO sobre cualquier jugada anotada abre un menú:
+    ➕ Acreditar empujada (+CI al bateador de esa jugada)
+    ➖ Restar empujada (−CI — ej. carrera por error que
+       no debe contar como empujada)
+    🟠 Carrera sucia para el pitcher (−CL)
+    🟢 Carrera limpia para el pitcher (+CL)
+  Sirve también en jugadas de entradas pasadas — el punto de
+  empujada cae en la casilla correcta de la jugada original.
+- PLANILLA — CAUSA DE CADA AVANCE EN EL DIAMANTE: como la hoja
+  manual, cada línea de avance del corredor ahora lleva su
+  etiqueta a mitad del segmento: BR (base robada), WP, PB, BK,
+  DI, BB, E, FC, AR (atrapado robando), PK — ya no hay que
+  adivinar por qué avanzó.
+- REGLA DE LIMPIAS: también cuentan como inmerecidas las
+  carreras de corredores que se embasaron por interferencia,
+  obstrucción o 3er strike con pasbola del receptor.
+- CORREGIR JUGADOR EN JUEGO INICIADO: si anotaste al jugador
+  EQUIVOCADO (ej. pusiste a Pedro de 3er bate pero era Luis),
+  ahora puedes arreglarlo SIN perder nada: en la planilla abre
+  Sustitución → pestaña "✏️ Corregir jugador" → elige al que
+  anotaste por error y al jugador real. TODAS sus jugadas ya
+  anotadas pasan al nombre correcto: si estaba en base, el
+  rombo muestra al correcto; sus hits, carreras, fildeo y
+  pitcheo quedan sumados a él. Funciona aunque hayan pasado
+  varias entradas (ej. el catcher era Juli, no Esteban).
+  Si el jugador real ya estaba en el lineup, los dos se
+  intercambian completos (sus jugadas se cruzan).
+  OJO: es distinto a "Cambio de jugador" — ese es una
+  sustitución real y NO toca las jugadas anteriores.
+- WEBSITE — CARD PNG ESTILO MLB: en la ficha de cada jugador
+  del sitio web hay un botón "🃏 Descargar card PNG". Genera
+  una tarjeta de colección VERTICAL (ideal WhatsApp/estados):
+  foto del jugador (o sus iniciales), nombre grande, equipo,
+  número, posición, B/T y sus números en cajas (AVG/OPS/HR/
+  CI/BR — si también lanzó, segunda fila W-L/ERA/WHIP/K/JS).
+  Usa el color del equipo de fondo y al pie dice "Generado en
+  PoxScore · Alexis Lara · 2026". Respeta la temporada que
+  estés viendo (o Carrera).
+- WEBSITE — LÍDERES CON DESPLEGABLE: la página Líderes ahora
+  tiene un selector "Ver líderes de:" → Bateo / Sabermetría /
+  Pitcheo / Defensa / Marcas del torneo (Highs & Lows).
+- PITCHEO muestra sus MARCAS: dentro de la sección Pitcheo
+  van los highs/lows individuales (más innings, ponches,
+  lanzamientos, menos hits permitidos, más bases por bolas).
+- DEFENSA con números sabermétricos: además de FPCT/PO/A/TC
+  ahora incluye RANGE FACTOR (PO+A)/J y tabla de menos
+  errores.
+- GENERADOR DE CALENDARIO MEJORADO:
+  · RANGO DE FECHAS — ahora puedes elegir "Del ... al ..."
+    (ej. del 3 de enero al 15 de marzo) y el generador llena
+    todas las jornadas que quepan en ese rango. Sin fecha final,
+    se sigue usando el número de vueltas/ciclos.
+  · VISITANTE DEL DÍA 1 — además del home club, eliges quién
+    lo visita el primer día (ej. día 1: La Pema @ El Arroyo).
+    En modo normal se reacomodan las parejas para que ese
+    partido abra el torneo.
+  · IMPRIMIR CALENDARIO PDF — al terminar de generar te
+    pregunta si quieres imprimirlo; también hay un botón
+    permanente "🖨️ Calendario PDF" en el tab 📅 Calendario.
+    Hoja carta vertical: jornada, fecha, día, hora, visitante
+    y home club.
+- ENCABEZADO DE LA LIGA LIMPIO: se eliminaron los botones
+  repetidos (Website/Descargar/Publicar ya no salen dos veces)
+  y el selector de Temporada va dentro de la misma barra de
+  acciones — menos filas, menos espacio vacío.
+- PUBLICAR REHECHO ESTILO FILEZILLA: barra de conexión rápida
+  arriba (protocolo, servidor, usuario, clave, puerto, carpeta),
+  CONSOLA DE LOG con el diálogo real del protocolo (comandos en
+  azul, respuestas del servidor, errores en rojo — se ve el
+  USER/PASS/MLSD como en FileZilla), Gestor de sitios a la
+  izquierda y panel "Sitio remoto" a la derecha que lista los
+  archivos del servidor al conectar. PROBADO en vivo contra un
+  FTP real: conecta, lista archivos y reporta errores de clave.
+- EL GENERADOR DE CALENDARIO ahora tiene su propio tab en la
+  liga: "📅 Calendario" (ya no va dentro de Juegos — imposible
+  perderlo). Nota: si no lo ves, presiona Ctrl+F5 — el navegador
+  guarda la versión vieja (la app es PWA).
+- ROSTERS PDF corregidos: nombres en MAYÚSCULA y todas las
+  columnas alineadas a la izquierda (antes salían centradas).
+- BARRA DE ACCIONES de la liga reorganizada: el encabezado solo
+  trae Editar y Nueva temporada; debajo quedan dos grupos
+  ordenados — "🌐 Website" (Abrir / Descargar / Publicar) y
+  "🖨️ PDF" (Reporte / Rosters / Lideratos).
+- Tablero de posiciones defensivas en VERDE estadio (Pantone)
+  en vez del azul/teal — más suave a la vista.
+- VISTA EN VIVO renovada: ya no muestra el menú de arriba —
+  es una pantalla flotante con fondo de estadio. Muestra el
+  ROMBO con los nombres de los corredores en base, quién está
+  AL BATE (con foto), quién LANZA y quién sigue EN ESPERA.
+- VISTA OBS NUEVA: en la vista en vivo hay un link "📺 vista
+  OBS" (o agrega /obs al final de la URL). Es un scorebug
+  compacto de fondo transparente — en OBS agrega una fuente
+  "Navegador" apuntando a esa URL (ej. 1280×720) y el bug
+  queda flotando sobre tu transmisión.
+- DIVISIONES: cada equipo puede tener división (Este/Oeste…).
+  Liga → Equipos: campo "División" al crear y al editar (✏️).
+  En el tab Posiciones la tabla se agrupa por división
+  automáticamente (JB calculado dentro de cada grupo).
+- GENERADOR DE CALENDARIO NUEVO (Liga → Juegos → 📅):
+  · Formato NORMAL (estilo MLB): series de 1-4 juegos seguidos
+    en el mismo home, vueltas (ida y vuelta alterna localía o
+    aleatorias balanceadas), días de la semana que se juega
+    (los demás quedan libres), doble jornada opcional y
+    vueltas extra solo dentro de cada división.
+  · Formato TRIANGULAR (softball de 3 equipos): cada jornada
+    un equipo es HOME CLUB y recibe a 1-2 visitantes; la
+    localía rota cada jornada (nadie repite home seguido) y
+    los pareos se balancean solos.
+  · TRIANGULAR "GANADOR SE QUEDA" (3 juegos/jornada): los 3
+    equipos juegan 2 veces cada uno. J1: visitante @ home;
+    J2: el GANADOR del J1 vs el que esperó; J3: el PERDEDOR
+    del J1 vs el que esperó. Quien repite juego INVIERTE su
+    rol (si fue home pasa a visita y viceversa). Como J2/J3
+    dependen del resultado, salen provisionales con su nota;
+    al iniciar el juego el anotador confirma o corrige el
+    pareo con un selector (solo en juegos programados).
+  · En ambos: eliges el HOME CLUB DEL PRIMER DÍA y el
+    generador hace el resto. "Borrar programados" limpia solo
+    los juegos sin iniciar antes de regenerar.
+- FUSIÓN DE JUGADORES CON NOMBRES DISTINTOS: en Fusionar ahora
+  aparece una sección "Nombres parecidos" que detecta la misma
+  persona escrita de dos formas (error de digitación o apellido
+  confundido — ej. "Angel Soto" vs "Angel Lachapell"). Detecta:
+  nombre casi igual, mismo nombre de pila en el mismo equipo y
+  mismo apellido en el mismo equipo. Botón "fusionar" pre-llena
+  los buscadores y eliges cuál ficha queda.
+- IMPORTANTE si ya fusionaste y ves menos números: al reiniciar,
+  el programa consolida solo las líneas duplicadas — las stats
+  de ambas fichas reaparecen sumadas en la ficha que quedó.
+- GANADOS Y PERDIDOS en la tarjeta del jugador: el pitcheo del
+  tab "Torneos" ahora muestra columnas GS, W-L, SV, HLD, CG y
+  SHO (antes solo IP, hits y carreras). También en el desglose
+  por equipo y en el log por juego (columna "Dec": G/P/JS/HLD).
+  Sirve igual para juegos anotados en vivo que para ligas
+  importadas de BallStat.
+- EXPORTACIÓN A PDF de rosters y lideratos (carta vertical
+  8.5x11): en la página de la Liga aparecen los botones
+  "Rosters PDF" (todos los equipos, una sección por equipo con
+  No./Nombre/Posición/B-T) y "Lideratos PDF" (top 10 por
+  categoría de bateo y pitcheo, respetando la regla de
+  clasificación de la liga). En la página del equipo hay
+  "Roster PDF" para ese solo equipo. Abren una vista previa
+  tipo papel — en el diálogo de impresión elegir
+  "Guardar como PDF".
+- CORREGIDA la tarjeta del jugador tras fusionar duplicados:
+  mostraba menos stats que el website (ej. 10 HR en vez de 22).
+  Al reiniciar, el programa consolida solo las líneas de juego
+  duplicadas que quedaron de fusiones anteriores — sin tocar
+  nada más de los datos.
+- Temporadas del jugador con cambio de equipo: ahora muestra lo
+  logrado EN CADA EQUIPO (una fila por equipo) y debajo el TOTAL
+  de la temporada.
+- NUEVO ESTILO visual tipo macOS moderno: barra superior
+  translúcida oscura (efecto vidrio), tarjetas y ventanas más
+  redondeadas con sombras suaves, botones y menús tipo píldora,
+  fondo gris claro, fuente del sistema (SF/Segoe UI) y colores
+  más limpios. Todo sigue funcionando igual — solo cambia el
+  aspecto. (El estilo anterior quedó guardado en
+  web/src/styles-classic.css por si se quiere volver.)
+- El respaldo .json ya se puede cargar desde Ligas → 📥 Importar
+  (antes daba "falta league / falta seasons"). También sirve en
+  Respaldo → Importar. Al terminar se cierra la ventana y muestra
+  un aviso verde con el resumen de lo restaurado.
+- Editar equipo: Liga → Equipos → botón ✏️ por fila
+  (nombre, abreviatura y COLOR del equipo — se ve como punto
+  de color junto al nombre).
+- Fusión de jugadores MEJORADA (menú 🔀 Fusionar):
+  · eliges la liga que administras → solo salen sus jugadores
+  · tabla "Posibles duplicados" (mismo nombre en varios equipos)
+    → fusión por lotes: eliges la ficha que queda y marcas las
+    demás — sus números se suman de una vez.
+- Deshacer sustitución: dentro de ⇄ Sustitución aparece la lista
+  de cambios hechos con botón "↩ deshacer" — devuelve al que salió
+  y saca al que entró por error.
+- Deshacer por jugadas: botón "↩ Jugadas…" junto a Deshacer —
+  lista todas las jugadas del juego y "borrar desde aquí" elimina
+  esa jugada y todas las posteriores (para errores de anotación).
+- Tecla D (tablero de defensa) corregida — antes no respondía
+  si no había bateador activo.
+- Menú responsive corregido: los enlaces bajan a segunda línea
+  en pantallas estrechas (nada queda oculto tras el buscador).
+- Boxscore de juegos importados (Sector Norte): ya muestra las
+  tablas de bateo/pitcheo con decisiones G/P/SV — antes salían
+  en blanco.
+- Líderes respetan la regla de clasificación de la liga
+  (PA/juego e IP/juego) tanto en la app como en el website.
+- Website: bracket visual de playoffs + comparador de jugadores
+  (#/comparar) + líderes con foto/inicial.
+
+CÓMO APLICARLA (5 minutos)
+--------------------------
+1. En la PC donde está instalado PoxScore, DETÉN el programa:
+   - Panel PoxScore.exe → botón "Detener", o
+   - icono en la bandeja (abajo a la derecha) → Salir.
+
+2. Copia el CONTENIDO de esta carpeta "actualizacion" sobre la
+   carpeta donde está instalado PoxScore (por ejemplo
+   C:\PoxScore o C:\app\poxscore) — elige "reemplazar todo"
+   cuando Windows pregunte.
+
+   O más fácil: copia esta carpeta dentro de la carpeta de
+   PoxScore y ejecuta ACTUALIZAR.bat (copia solo y aplica el
+   cambio de base de datos).
+
+3. IMPORTANTE — base de datos: esta versión agrega la columna
+   Team.division (además de tablas de usuarios y desempate de
+   versiones anteriores).
+   ACTUALIZAR.bat lo hace solo con `npx prisma db push` +
+   `npx prisma generate` (los DOS son necesarios — sin el
+   segundo el server se cae al anotar).
+   Si lo haces a mano:
+       cd server
+       npx prisma db push
+       npx prisma generate
+   (si falla con error de DLL ocupado: asegúrate de que el
+   programa esté detenido y repite)
+
+4. Inicia PoxScore y en el navegador presiona  Ctrl + F5
+   (recarga sin caché — si no lo haces puede mostrar la versión
+   vieja guardada).
+
+CÓMO VERIFICAR QUE LA ACTUALIZACIÓN QUEDÓ APLICADA
+------------------------------------------------
+Abre en el navegador de la otra PC:
+
+    http://localhost:4000/api/health
+
+- Si responde  {"ok":true,"name":"PoxScore API","v":"2026-10-10.23"}
+  → el server nuevo está corriendo, todo listo.
+- Si responde SIN "v"  → el server viejo sigue en memoria:
+  detén PoxScore, cierra cualquier node.exe en el Administrador
+  de tareas (Ctrl+Shift+Esc → Detalles) y vuelve a iniciar.
+- Si no responde → el server no arrancó; mira launcher\server.log
+
+NUEVO EN ESTA ACTUALIZACION
+---------------------------
+- MODO ABIERTO: ya NO hay pantalla de login. La app entra
+  directo; quien quiera usuarios los crea en /usuarios.
+- La clave de admin (admin123) solo se pide para las acciones
+  de administrador (borrar/bloquear). El bat la agrega a
+  server\.env como ADMIN_KEY si no existe.
+- Este bat tambien borra los usuarios existentes para dejar
+  el modo abierto — si creaste usuarios a proposito y quieres
+  conservarlos, edita ACTUALIZAR.bat y quita la linea
+  "call node scripts\reset-auth.mjs".
+- Una sola ventana de la app + pestana unica por juego.
+- La app se auto-actualiza sola al cargar (sin reset manual).
+
+TUS DATOS
+---------
+- La base de datos MySQL no se toca: ligas, jugadores, juegos
+  y usuarios quedan intactos.
+- El archivo server\.env NO se sobreescribe (no viene en esta
+  carpeta) — tu contraseña de MySQL sigue igual.
+- Antes de actualizar puedes hacer un respaldo desde la app
+  (Respaldo → Descargar respaldo completo) por precaución.
+
+NAVEGADOR PROPIO (opcional pero recomendado)
+------------------------------------------
+PoxScore.exe ahora abre la app en su PROPIO navegador (LibreWolf):
+ventana tipo app — sin barras del navegador PERO con la barra de
+titulo de Windows (botones minimizar / maximizar / cerrar).
+Modo incognito, microfono permitido y dialogo de impresion para
+elegir donde imprimir.
+Ya VIENE INCLUIDO en este paquete (carpeta browser\, ~400MB
+portable — NO se instala en Windows, queda dentro de PoxScore).
+Si falta o quieres otra version: launcher\BAJAR-NAVEGADOR.bat
+lo baja de nuevo de librewolf.net.
+Si no esta LibreWolf, PoxScore abre en tu navegador normal como antes.
+
+¿Problemas? Revisa launcher\server.log o ejecuta
+  server> npx tsx src/index.ts
+en una consola para ver el error directo.
+
+- PROTECCION ANTI-BORRADO AL ANEXAR TEMPORADA:
+  * Si el nombre del archivo dice un año distinto al detectado
+    (ej. "…2025.rar" pero los juegos salen como 2026), la vista
+    previa lo advierte ANTES de importar.
+  * El aviso de año duplicado ahora dice exactamente qué se
+    borraría: "reemplazar BORRARÁ la temporada 2026 (85 juegos)".
+- Script server\scripts\restore-season.ts: recupera UNA
+  temporada de un respaldo auto-*.json sin tocar el resto:
+    npx tsx scripts\restore-season.ts backups\auto-XXXX.json "Mi Liga" 2026
+  (dry-run primero; agrega --apply para ejecutar).
+- Anotar: si el cliente Prisma quedó viejo tras una
+  actualización (generate falló), las jugadas se graban igual —
+  el POST reintenta sin el campo que el cliente no conoce.
+
+- ROBUSTEZ (anti-crash):
+  * Respaldo automático ANTES de toda operación destructiva:
+    reemplazar temporada, restaurar respaldo, borrar liga y
+    fusionar jugador (anti-ráfaga: máx. 1 respaldo cada 90s).
+  * El server detecta cliente Prisma viejo al arrancar → la app
+    muestra banner rojo "corre npx prisma generate" vía health.
+  * server\selftest.cjs — chequeo pre-campo/post-actualización:
+    API viva, Prisma al día, BD responde, disco OK para
+    respaldos. ACTUALIZAR.bat lo corre al final (si el server
+    está apagado dice que lo corras al iniciar).
+  * Anotar: si el cliente Prisma es viejo, las jugadas se graban
+    igual (reintenta sin el campo desconocido).
+- IMPORTAR — FUSIONAR TEMPORADA (bases partidas):
+  * Caso: la base BallStat se daño a mitad de año, crearon
+    «2025 B» y siguieron anotando ahi → son DOS fragmentos
+    de la MISMA temporada.
+  * Al anexar un archivo cuyo año YA existe en la liga ahora
+    hay 3 opciones en el modal de importar:
+      - nada marcado → error (proteccion)
+      - «🧩 Fusionar» → AGREGA los juegos nuevos a la
+        temporada existente SIN borrar nada; los juegos
+        repetidos (misma fecha y equipos) se saltan y los
+        acumulados de los jugadores se suman.
+      - «♻️ Reemplazar» → borra la temporada vieja
+        (como antes, con respaldo automatico).
+  * «Emerson Rodriguez 2025» (con año pegado) matchea la
+    ficha «Emerson Rodriguez» automatico — no crea duplicado.
+  * Antes de fusionar se hace respaldo automatico y si el
+    import muere a la mitad se restauran los acumulados
+    previos (nada queda a medias ni duplicado).
+  * Prueba: server/test-merge.ts (npx tsx test-merge.ts).
+
+== 13-oct (v4) — v2026-10-13.29 ==
+- IMPORTAR — LA FICHA DEL AÑO VIGENTE MANDA (arregla la
+  logica invertida que abultaba 2026):
+  * Al anexar el año B a una liga con el año A, los nombres
+    de B NUNCA toman control de la ficha: sus numeros solo
+    se suman como temporada B a la ficha existente.
+  * "CMB" en el nombre es etiqueta del usuario — ahora se
+    ignora AL CASAR jugadores (se conserva en la ficha).
+    «CMB Edison Gonzalez» cae en la ficha «Edison Gonzalez»
+    existente y le suma su temporada — no crea duplicado ni
+    le cambia el nombre/equipo.
+  * En la tabla «¿A donde van estos nombres?» la ficha del
+    año vigente ahora aparece como candidata (antes el
+    prefijo CMB la escondia) → se elige y los numeros van a
+    la ficha actual.
+  * /fusionar agrupa las fichas «Cmb X» ya en la base con su
+    par «X» → fusion manual eligiendo que quede la ficha del
+    año vigente (radio + checks por lote).
+  * Jugador que solo existe en temporadas atrasadas nace
+    PASIVO — no abulta el roster vigente (ej. Danny
+    Vizcaino del 2024 no aparece activo en 2026).
+- Limpiar lo ya importado: /fusionar (fichas CMB/duplicadas)
+  + dar de baja a pasivos desde la ficha del equipo, o
+  npx tsx server/scripts/mark-passive.ts "Mi Liga" (vista
+  previa primero; --apply para ejecutar).
+
+- RECUPERAR LIGA AL ESTADO PREVIO AL IMPORT (una sola pasada):
+  * Script server\scripts\restore-league.ts — BORRA la liga
+    dañada y la restaura EXACTAMENTE como estaba en un
+    respaldo auto-*.json (jugadores, fichas, juegos, todo):
+      cd server
+      npx tsx scripts\restore-league.ts backups\auto-XXXX.json "Sector Norte 2026"
+    → vista previa: muestra años/equipos/juegos del respaldo
+      vs lo que hay ahora. Para SN26 debe decir [2026] solo.
+      npx tsx scripts\restore-league.ts backups\auto-XXXX.json "Sector Norte 2026" --apply
+    → ejecuta (hace respaldo automatico antes de borrar).
+  * El respaldo correcto = el auto-*.json de ANTES del
+    import viejo (estan en server\backups\ — elige por fecha
+    del archivo; si dudas, la vista previa te dice los años).
+  * Despues de restaurar, los años viejos se re-importan
+    como liga aparte o anexando — con v2026-10-13.29 los
+    nombres viejos ya no toman control de las fichas.
+
+- RESTAURAR LIGA SIN CONSOLA (boton en la app):
+  * Ligas → 🕐 Restaurar (arriba a la derecha, junto a
+    📥 Importar) → elige el respaldo auto-* → marca la liga
+    → clave admin → Restaurar. Borra la liga actual y la
+    deja EXACTAMENTE como en ese respaldo (respaldo nuevo
+    automatico antes de borrar).
+  * Sirve para el daño del import viejo: eliges el respaldo
+    de ANTES del import (el preview muestra los años que
+    trae — para SN26 debe decir 2026 solo) y la liga vuelve
+    limpia en 2 clics.
+  * El script scripts\restore-league.ts sigue existiendo
+    por si se necesita por consola — misma logica.
+- Tarjeta de jugador (fix2): las fichas bloqueadas ya no crasheaban en blanco
+  (se leian torneos antes del chequeo de bloqueo).
+- Fusionar: nueva seccion "Fundir en una ficha" — eliges la ficha VIGENTE
+  primero y tachas en lote a los parecidos (incluye fichas dadas de baja).
+  Buscador extra para el mismo jugador con nombre distinto. La vigente
+  siempre es la que queda con su nombre, equipo y numeros.
+- Conversor BallStat: alias de equipo ampliados — los logs que abrevian
+  "Las Dunas" como LDN o "Arroyo Bahia" como BAH/ARB ya mapean; sin eso
+  los juegos contra ese equipo perdian todas sus lineas de jugador.
+- Lanzador persistente (FIX #1): el relevista YA NO desaparece al cambiar de
+  inning — el lanzador activo se deriva del ultimo evento PC (cambio de
+  lanzador) por equipo; persiste entre entradas y recargas de pagina.
+- Regla oficial 3er out forzado (FIX #6): las carreras NO cuentan si el 3er
+  out es forzado (bateador antes de 1a o corredor forzado), aunque hayan
+  pisado home. Corrige score, boxscore, linescore y LOB.
+- Mis Alineaciones (FIX #7): cada equipo puede guardar VARIAS alineaciones
+  nombradas (ya no se borra la anterior al guardar la 2da). En Alineaciones:
+  boton "Mis alineaciones" — usar, renombrar, duplicar, borrar.
+- Auditoria de juego (FIX #17): Admin > Juegos > boton "Auditoria". Editar,
+  insertar o borrar jugadas de juegos FINALIZADOS recalcula TODO: marcador,
+  boxscore, stats individuales, acumulados de temporada y standings. Si el
+  resultado cambia (ej. empate->ganado) exige W/L/SV antes de aplicar. Cada
+  cambio queda en la bitacora (fecha + usuario + motivo) — boton "Bitacora".
+- Decisiones corregidas solas (PUT /decisions) ahora tambien resincronizan
+  la temporada por delta — cambiar empate a ganado refleja W/L en pitchers.
+
+== 13-oct (v5) — v2026-10-13.30 ==
+- CORRECCION QUIRURGICA EN PLANILLA (FIX #8): clic derecho sobre
+  cualquier jugada de la planilla → "Corregir jugada". Cambias a donde
+  llego cada corredor, el resultado y la notacion de ESA jugada sin
+  borrar la entrada — el marcador y las stats se recalculan solos
+  (anoto→no anoto resta la carrera solo). En juego FINAL sigue la
+  Auditoria (con decisiones y bitacora).
+- AVANCE DE CORREDORES CON ERROR (FIX #9): en EN BASE hay motivo
+  "Error" con chips E1-E9 — el error se le carga al fildeador, la
+  carrera cae inmerecida al pitcher y la planilla pinta la marca E.
+- FLY vs HIT SEPARADOS (FIX #16): la zona de un hit lleva prefijo H
+  (H8, HF8, HG6). Un F8 pelado siempre es elevado out — ya no se
+  confunden.
+- "FORZADO" EN LA SECCION OUT (FIX #13): corredor forzado out y el
+  bateador llega a 1a por seleccion.
+- (LR) EN BOXSCORE (FIX #4): todo lanzador despues del abridor sale
+  marcado (LR) en la tabla de pitcheo.
+- REINGRESO UNA VEZ (FIX #5): el sistema rechaza que un jugador
+  reingrese dos veces al mismo juego (regla softball).
+- CARRERAS SUCIAS EN ROJO (FIX #11): la casilla donde anoto una
+  carrera en jugada con error queda con fondo rojo traslucido.
+- RESUMEN AL CERRAR LA ENTRADA (FIX #14): al caer el 3er out sale
+  popup con C/H/E/dejados de esa media + score + los proximos 3
+  bateadores. Al terminar el juego: resumen final con los totales
+  de ambos equipos.
+- GUARDAR ALINEACION YA NO BORRA LA DEL CONTRARIO: el editor del
+  otro equipo conserva tus cambios aunque guardes la del primero.

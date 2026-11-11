@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// Liga o torneo — agrupa equipos; las temporadas viven en Season (cada una divide
+/// juegos, posiciones y estadísticas por año). `year` es espejo de la temporada activa.
+model League {
+  id        String   @id @default(cuid())
+  name      String
+  year      Int      // año de la temporada activa/reciente (se actualiza al crear Season)
+  sport     String   @default("baseball") // baseball | softball
+  innings   Int?     // entradas reglamentarias de la liga (null = 9 baseball / 7 softball)
+  wpMinOuts Int?     // mínimo del abridor para la W en TERCIOS (inn*3+tercios): null = regla oficial automática (MLB 9.17 / WBSC R12)
+  qualPa    Float    @default(3.1) // PA por juego del equipo p/ clasificar a líderes de bateo (MLB 9.22: 3.1); 0 = sin mínimo
+  qualIp    Float    @default(1.0) // IP por juego del equipo p/ clasificar a líderes de pitcheo (MLB: 1.0); 0 = sin mínimo
+  sprayInput Boolean @default(true) // anotador: mostrar el spray sheet para ubicar el batazo al confirmar la jugada (se apaga por liga en 🛡 Administración)
+  createdAt DateTime @default(now())
+  teams     Team[]
+  games     Game[]
+  series    Series[]
+  seasons   Season[]
+  playoffTeams Int? // cuántos clasifican a postemporada
+  playoffRounds Int? // cuántas rondas de playoff
+  byes Json? // equipos sentados por ronda: {round: teamId[]}
+  tb    String @default("pct") // desempate en standings: pct | h2h | diff
+}
+
+/// Temporada dentro de la liga — cada año es una temporada independiente
+/// ("nueva temporada" = crear Season; la anterior queda ENDED).
+model Season {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  year      Int
+  status    String   @default("ACTIVE") // ACTIVE | ENDED
+  createdAt DateTime @default(now())
+  games     Game[]
+  series    Series[]
+
+  @@unique([leagueId, year])
+  @@index([leagueId])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  shortName String?
+  color     String?
+  division  String? // división dentro de la liga (ej. "Este"/"Oeste") — agrupa standings y calendario
+  leagueId  String?  // liga/torneo al que pertenece (null = equipo libre)
+  league    League?  @relation(fields: [leagueId], references: [id], onDelete: SetNull)
+  lineupTemplate String? @db.MediumText // JSON {v:2,items:[{id,name,at,entries:[{playerId,position,batsInOrder}]}]} — "Mis Alineaciones"
+  blocked   Boolean  @default(false) // excluido de la publicación web: el dato queda en el sistema pero sale "EQUIPO BLOQUEADO" con números tapados
+  createdAt DateTime @default(now())
+  players   Player[]
+  homeGames Game[]   @relation("HomeTeam")
+  awayGames Game[]   @relation("AwayTeam")
+}
+
+model Player {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  number    Int?
+  bats      String?  // L, R, S
+  throws    String?  // L, R
+  positions String?  // csv: "SS,2B"
+  photo     String?  @db.MediumText // foto del jugador: JPEG cuadrado 256px en base64 (data URL)
+  active    Boolean  @default(true)
+  blocked   Boolean  @default(false) // excluido de la publicación web: perfil existe pero dice "BLOQUEADO" y los números salen tapados
+  lineups   LineupEntry[]
+  seasons   PlayerSeasonStat[]
+}
+
+model Game {
+  id         String   @id @default(cuid())
+  date       DateTime @default(now())
+  status     String   @default("SCHEDULED") // SCHEDULED | LIVE | SUSPENDED | FINAL
+  sport      String   @default("baseball")  // baseball | softball
+  innings    Int      @default(9)
+  ghostRunner Boolean @default(false)        // corredor fantasma en entradas extras (tie-break)
+  stadium    String?                         // estadio/campo del juego
+  // cuerpo de ampáyers (registro estilo BallStat)
+  umpireHp   String?                         // home plate
+  umpire1b   String?
+  umpire2b   String?
+  umpire3b   String?
+  startedAt  DateTime?                       // inicio real (para el reloj de juego)
+  endedAt    DateTime?                       // fin real del juego
+  pausedAt   DateTime?                       // reloj pausado desde este momento (null = corriendo)
+  pauseSecs  Int      @default(0)            // segundos acumulados en pausa (se restan del reloj)
+  pausedAuto Boolean  @default(false)        // la pausa la hizo el sistema al cerrar la app — se reanuda sola al volver
+  // decisiones del juego
+  wpId       String?                         // lanzador ganador
+  lpId       String?                         // lanzador derrotado
+  svId       String?                         // salvado
+  hldIds     String?                         // JSON [playerId] — holds
+  bsIds      String?                         // JSON [playerId] — blown saves (salvado fallado)
+  tied       Boolean  @default(false)        // empate: sin ganador ni derrotado
+  forfeitBy  String?                         // teamId que perdió por forfeit
+  fScoreAway Int?                            // marcador forfeit (regla: innings-0 o marcador real si iba ganando)
+  fScoreHome Int?
+  seasonApplied Boolean @default(false)      // stats ya acumuladas en la temporada
+  leagueId   String?                          // liga/torneo del juego
+  league     League?  @relation(fields: [leagueId], references: [id], onDelete: SetNull)
+  seasonId   String?                          // temporada dentro de la liga
+  season     Season?  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  homeTeamId String
+  awayTeamId String
+  homeTeam   Team     @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam   Team     @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  statLines  Json?                           // líneas de stats por jugador (import sin eventos)
+  auditLog   Json?                           // bitácora de auditoría post-final: [{at,user,reason,ops,scoreBefore,scoreAfter,decisions}]
+  boxscoreJson String?  @db.MediumText        // boxscore oficial generado (JSON) — módulo AI
+  playByPlay  String?   @db.MediumText        // texto jugada a jugada generado — módulo AI
+  note       String?
+  events     GameEvent[]
+  lineups    LineupEntry[]
+  seriesId   String?
+  series     Series?  @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+}
+
+/// Acumulado de temporada por jugador — se suma al finalizar cada juego
+model PlayerSeasonStat {
+  id       String @id @default(cuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season   Int    // año
+  scope    String @default("REG") // REG = temporada regular | POST = playoffs
+  // bateo
+  g       Int @default(0)
+  pa      Int @default(0)
+  ab      Int @default(0)
+  r       Int @default(0)
+  h       Int @default(0)
+  doubles Int @default(0)
+  triples Int @default(0)
+  hr      Int @default(0)
+  rbi     Int @default(0)
+  bb      Int @default(0)
+  k       Int @default(0)
+  hbp     Int @default(0)   // golpeado por lanzamiento
+  sac     Int @default(0)
+  sf      Int @default(0)
+  sb      Int @default(0)
+  // pitcheo
+  gp    Int @default(0)
+  gs    Int @default(0)   // juegos abiertos
+  w     Int @default(0)
+  l     Int @default(0)
+  sv    Int @default(0)
+  hld   Int @default(0)
+  bs    Int @default(0)   // blown save — salvado fallado
+  cg    Int @default(0)   // juego completo (lanzó todos los outs de su lado)
+  sho   Int @default(0)   // blanqueada individual (CG + rival en 0)
+  pOuts Int @default(0)   // outs lanzados (IP = pOuts/3)
+  pH    Int @default(0)
+  pR    Int @default(0)
+  pER   Int @default(0)   // carreras limpias
+  pBB   Int @default(0)
+  pK    Int @default(0)
+  pHR   Int @default(0)
+  pPitches Int @default(0) // lanzamientos totales
+  // fildeo
+  e Int @default(0)
+
+  // corrección manual (✏️ Editar stats en la tarjeta): delta por campo
+  // {pa:+2, pOuts:-3, ...} = lo que escribió el anotador MENOS lo que suman
+  // los juegos. Invariante: campos = derivadoDeJuegos + adj. Los agregados
+  // (liga, tarjeta, website) muestran derivado + adj para que la corrección
+  // se refleje en todas partes, no solo en el tab "Por año".
+  adj Json?
+
+  @@unique([playerId, season, scope])
+  @@index([playerId]) // respaldo de la FK al soltar el único (playerId,season)
+  @@index([season])
+}
+
+model LineupEntry {
+  id         String  @id @default(cuid())
+  gameId     String
+  game       Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  teamId     String  // para qué lado batea/defiende en este juego
+  playerId   String  // id único del jugador — puede ser refuerzo de otro equipo
+  player     Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  order      Int
+  position   String
+  batsInOrder Boolean @default(true)    // false = lanza pero no batea (ej. con DH/EH)
+  role       String  @default("STARTER") // STARTER | SUB | OUT
+  active     Boolean @default(true)      // false cuando fue sustituido
+  replacesId String?                     // LineupEntry al que reemplazó (si es SUB)
+  subInInning Int?                       // entrada en la que entró (marca estilo hoja manual)
+  subInHalf   String?                    // TOP | BOTTOM
+
+  @@index([gameId, teamId])
+}
+
+model GameEvent {
+  id        String   @id @default(cuid())
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  seq       Int
+  inning    Int
+  half      String   // TOP | BOTTOM
+  batterId  String?
+  pitcherId String?
+  result    String
+  notation  String?  // combinación defensiva: "6-3", "6-4-3", "F8", "E5"
+  sprayDir  Float?   // dirección del batazo en grados desde CF: -45 línea LF, 0 CF, +45 línea RF, |dir|>45 = foul
+  sprayDist Float?   // distancia % del muro por esa dirección: 100 = muro, >100 = fuera del parque
+  errorOn   String?  // JSON [playerId] — fildeadores cargados con error (de "E5"…)
+  putouts   String?  // JSON [playerId] — outs de fildeo (de la notación "6-4-3": 4 y 3 capturan)
+  assists   String?  // JSON [playerId] — asistencias (de la notación: quienes lanzaron)
+  advances  Json     // [{playerId, to}]
+  // columnas de los módulos AI
+  aiVoice   String?  @db.Text       // transcripción de voz original (dominicano) que originó la jugada
+  aiJson    String?  @db.MediumText // JSON de notación sugerida por IA
+  aiVideo   String?  @db.MediumText // JSON del análisis de video (detección simulada MVP)
+  aiNarr    String?  // narración generada para la jugada
+  // idempotencia del cliente: la app genera una llave por jugada — si el POST
+  // se reintenta (cola offline, doble toque, voz repetida) y la jugada ya se
+  // grabó, el server devuelve la existente en vez de duplicarla
+  clientKey String?
+  createdAt DateTime @default(now())
+
+  @@unique([gameId, seq])
+  @@unique([gameId, clientKey])
+  @@index([gameId])
+}
+
+// Serie de playoff: pareo al mejor de N dentro de una ronda
+model Series {
+  id          String   @id @default(cuid())
+  leagueId    String
+  league      League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  seasonId    String?
+  season      Season?  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  round       Int      // 1 = primera ronda; rondas mayores = semis/final
+  name        String   // "Semifinal A", "Final"…
+  homeTeamId  String   // mayor seed = local de la serie
+  awayTeamId  String
+  winsNeeded  Int      @default(3) // victorias para ganar (3 = al mejor de 5)
+  status      String   @default("PENDING") // PENDING | LIVE | DONE
+  winnerTeamId String?
+  games       Game[]
+  createdAt   DateTime @default(now())
+}
+
+// Usuarios de la suite — si no hay usuarios todo queda abierto (modo local).
+// Roles: admin (todo) > anotador (juegos/alineaciones) > visita (solo lectura futura).
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  passHash  String   // scrypt "salt:hash" hex
+  role      String   @default("anotador") // admin | anotador | visita
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  tokens    AuthToken[]
+}
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}

@@ -1,0 +1,17 @@
+{
+  "name": "poxscore-launcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "launcher.mjs",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "systray": "^1.0.5"
+  },
+  "private": true,
+  "scripts": {
+    "start": "node launcher.mjs"
+  }
+}

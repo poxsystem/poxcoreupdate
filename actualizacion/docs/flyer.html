@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PoxScore — Folleto</title>
+<style>
+  /* ============================================================
+     FOLLETO POXSCORE — hoja carta 8.5×11, dos caras, doblez central
+     IMPRESIÓN: doble cara → "voltear por el BORDE LARGO", escala 100%
+     Cara 1 = EXTERIOR (izq: contraportada | der: portada)
+     Cara 2 = INTERIOR (izq: página 2       | der: página 3)
+     ============================================================ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #0b5e36; --green2: #128a4d; --lime: #8fd14f;
+    --ink: #1d1d1f; --gray: #86868b; --paper: #f5f5f7;
+    --blue: #007aff; --cream: #fdf8ee; --gold: #e8b93e;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    background: #d7d7db; color: var(--ink);
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page { width: 8.5in; height: 11in; display: flex; margin: 14px auto; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+  .panel { width: 4.25in; height: 11in; padding: .45in .4in; position: relative; overflow: hidden; }
+
+  /* ---------- EXTERIOR ---------- */
+  .cover-back { background: linear-gradient(160deg, #062b1a, #0b5e36 60%, #0e7a45); color: #eaf6ee; }
+  .cover-front { background: linear-gradient(170deg, #0b5e36 0%, #0e7a45 55%, #149a58 100%); color: #fff; }
+
+  .foldline { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed rgba(255,255,255,.25); }
+
+  /* portada */
+  .brand-pill {
+    display: inline-block; padding: 5px 14px; border-radius: 999px;
+    background: rgba(255,255,255,.14); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,.25); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .hero {
+    margin-top: .55in; text-align: left;
+  }
+  .hero h1 { font-size: 54px; line-height: .95; letter-spacing: -1.5px; font-weight: 800; }
+  .hero h1 em { font-style: normal; color: var(--lime); }
+  .hero p.tag { margin-top: 14px; font-size: 16px; line-height: 1.45; color: #dff3e5; max-width: 3.2in; }
+  .hero p.tag b { color: #fff; }
+
+  /* mini "screenshot" CSS */
+  .mock {
+    margin-top: .45in; background: #fff; border-radius: 14px; padding: 12px 14px;
+    color: var(--ink); box-shadow: 0 18px 40px rgba(0,0,0,.28);
+    transform: rotate(-1.2deg);
+  }
+  .mock .bar { display: flex; gap: 5px; margin-bottom: 9px; }
+  .mock .bar i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+  .mock table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+  .mock th { text-align: left; color: var(--gray); font-size: 8px; text-transform: uppercase; letter-spacing: .06em; padding: 3px 4px; border-bottom: 1px solid #ececf0; }
+  .mock td { padding: 3.5px 4px; border-bottom: 1px solid #f3f3f6; }
+  .mock td.num, .mock th.num { text-align: right; }
+  .mock tr:first-child td { font-weight: 700; }
+  .mock .lead { color: var(--green2); font-weight: 700; }
+
+  .cover-foot { position: absolute; left: .4in; right: .4in; bottom: .42in; display: flex; align-items: center; justify-content: space-between; }
+  .cover-foot .balls { font-size: 22px; letter-spacing: 8px; }
+  .cover-foot small { color: #cdead9; font-size: 10.5px; }
+
+  /* contraportada */
+  .back-inner { display: flex; flex-direction: column; height: 100%; }
+  .back-inner .logo { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin-top: .3in; }
+  .back-inner .logo em { font-style: normal; color: var(--lime); }
+  .back-quote { margin-top: .35in; font-size: 15.5px; line-height: 1.55; color: #dff3e5; }
+  .back-quote b { color: #fff; }
+  .back-feats { margin-top: .3in; list-style: none; }
+  .back-feats li { padding: 7px 0 7px 26px; position: relative; font-size: 12.5px; color: #eaf6ee; border-bottom: 1px solid rgba(255,255,255,.14); }
+  .back-feats li::before { content: "✓"; position: absolute; left: 2px; color: var(--lime); font-weight: 800; }
+  .back-bottom { margin-top: auto; text-align: center; padding-top: .3in; }
+  .back-bottom .qr {
+    width: .95in; height: .95in; margin: 0 auto 12px; border-radius: 12px;
+    background: repeating-conic-gradient(#fff 0 25%, #0b5e36 0 50%) 0 0/14px 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  .back-bottom .qr span { background: var(--green); color: #fff; font-size: 9px; padding: 3px 7px; border-radius: 6px; font-weight: 700; }
+  .back-bottom p { font-size: 11.5px; color: #cdead9; line-height: 1.6; }
+  .back-bottom b { color: #fff; font-size: 13px; }
+
+  /* ---------- INTERIOR ---------- */
+  .inside { background: var(--cream); }
+  .inside h2 { font-size: 21px; letter-spacing: -.4px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+  .inside .kick { font-size: 10.5px; text-transform: uppercase; letter-spacing: .14em; color: var(--gray); font-weight: 700; }
+  .inside .rule { height: 3px; width: 42px; background: var(--lime); border-radius: 2px; margin: 8px 0 14px; }
+  .feat { display: flex; gap: 9px; margin-bottom: 9.5px; align-items: flex-start; }
+  .feat .ic { flex: none; width: 26px; height: 26px; border-radius: 8px; background: #e5f3ea; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .feat b { font-size: 12.5px; display: block; }
+  .feat span { font-size: 11px; color: #555; line-height: 1.35; }
+
+  .steps { margin-top: .18in; }
+  .step { display: flex; gap: 10px; margin-bottom: 11px; align-items: flex-start; }
+  .step .n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #fff; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .step b { font-size: 12.5px; display: block; }
+  .step span { font-size: 11px; color: #555; line-height: 1.35; }
+
+  .cta {
+    margin-top: .22in; background: linear-gradient(135deg, var(--green), var(--green2));
+    border-radius: 14px; padding: 16px 16px; color: #eaf6ee; text-align: center;
+  }
+  .cta b { display: block; font-size: 15px; color: #fff; margin-bottom: 5px; }
+  .cta p { font-size: 11.5px; line-height: 1.5; }
+  .cta .pill-w { display: inline-block; margin-top: 9px; background: #fff; color: var(--green); font-weight: 800; font-size: 12px; padding: 7px 18px; border-radius: 999px; }
+
+  .in-foot { position: absolute; bottom: .35in; left: .4in; right: .4in; text-align: center; font-size: 10px; color: #9a9a9e; }
+  .in-foot b { color: var(--green); }
+
+  /* nota en pantalla */
+  .note { max-width: 8.5in; margin: 14px auto 0; background: #fff8e1; border: 1px solid #ecd27a; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; }
+
+  @page { size: letter portrait; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .note { display: none; }
+    .page { margin: 0; box-shadow: none; page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="note no-print">
+  🖨️ <b>Para imprimir el folleto:</b> Ctrl+P → impresora → <b>doble cara</b> →
+  <b>«Voltear por el borde largo»</b> → escala <b>100%</b> → papel <b>carta</b>.
+  Luego dobla la hoja al medio: la portada queda al frente.
+</div>
+
+<!-- ============ CARA 1 — EXTERIOR ============ -->
+<section class="page">
+  <!-- contraportada (lado izquierdo de la hoja) -->
+  <div class="panel cover-back">
+    <div class="back-inner">
+      <div class="brand-pill">Beisbol · Softbol</div>
+      <div class="logo">Pox<em>Score</em></div>
+      <p class="back-quote">
+        Tu liga merece más que una planilla en papel.
+        <b>Anota como los profesionales, publica como las grandes ligas.</b>
+      </p>
+      <ul class="back-feats">
+        <li>Anotación jugada a jugada, en vivo</li>
+        <li>Estadísticas completas: bateo, pitcheo, fildeo</li>
+        <li>Posiciones, líderes y playoffs automáticos</li>
+        <li>Website de tu liga generado al instante</li>
+        <li>Recupera tus datos de BallStat / BallScore</li>
+        <li>Respaldo automático — tus números siempre seguros</li>
+      </ul>
+      <div class="back-bottom">
+        <div class="qr"><span>localhost:4000</span></div>
+        <p>Corre en tu propia PC.<br><b>Sin internet, sin mensualidades.</b></p>
+      </div>
+    </div>
+  </div>
+  <div class="foldline" style="left:4.25in"></div>
+
+  <!-- portada (lado derecho) -->
+  <div class="panel cover-front">
+    <div class="brand-pill">⚾ 🥎 Temporada 2026</div>
+    <div class="hero">
+      <h1>Pox<em>Score</em></h1>
+      <p class="tag">El sucesor moderno de <b>BallScore y BallStat</b>.
+        Anota el juego en vivo y deja que el sistema haga el resto:
+        boxscores, tablas, líderes y el website de tu liga.</p>
+    </div>
+    <div class="mock">
+      <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+      <table>
+        <tr><th>Posiciones</th><th class="num">G</th><th class="num">P</th><th class="num">PCT</th><th class="num">JB</th></tr>
+        <tr><td>El Arroyo</td><td class="num lead">12</td><td class="num">6</td><td class="num">.667</td><td class="num">—</td></tr>
+        <tr><td>La Pema</td><td class="num">10</td><td class="num">8</td><td class="num">.556</td><td class="num">2.0</td></tr>
+        <tr><td>El Cajuil</td><td class="num">7</td><td class="num">11</td><td class="num">.389</td><td class="num">5.0</td></tr>
+      </table>
+    </div>
+    <div class="cover-foot">
+      <div class="balls">⚾ 🥎</div>
+      <small>Desarrollado por Alexis Lara</small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CARA 2 — INTERIOR ============ -->
+<section class="page">
+  <!-- página interior izquierda -->
+  <div class="panel inside">
+    <div class="kick">Por qué PoxScore</div>
+    <h2>Todo lo que hacías a mano, ahora solo</h2>
+    <div class="rule"></div>
+
+    <div class="feat"><div class="ic">✏️</div><div><b>Anotación completa en vivo</b><span>Jugadas especiales, conteo bola-strike, sustituciones con deshacer, corrección de errores jugada por jugada.</span></div></div>
+    <div class="feat"><div class="ic">📊</div><div><b>Estadísticas profesionales</b><span>AVG, OBP, SLG, OPS, WAR, ERA, WHIP, FIP, rachas, cara a cara, splits por mes y últimos 10 juegos.</span></div></div>
+    <div class="feat"><div class="ic">📅</div><div><b>Calendario automático</b><span>Series estilo MLB o triangular de softball, divisiones, dobles jornadas y días de juego a tu medida.</span></div></div>
+    <div class="feat"><div class="ic">🏆</div><div><b>Playoffs con bracket</b><span>Rondas al mejor de N, ganadores automáticos y llave visual lista para publicar.</span></div></div>
+    <div class="feat"><div class="ic">🔀</div><div><b>Administra tu liga de verdad</b><span>Transferencias, bajas, fusión de fichas duplicadas, divisiones y temporadas históricas por año.</span></div></div>
+    <div class="feat"><div class="ic">📥</div><div><b>Importa BallStat / BallScore</b><span>Rescata los archivos viejos de tu liga: jugadores, juegos y estadísticas históricas.</span></div></div>
+    <div class="feat"><div class="ic">🖨️</div><div><b>Reportes y PDF</b><span>Rosters, líderes, tarjetas de alineación y planillas de anotación, en carta listo para imprimir.</span></div></div>
+  </div>
+  <div class="foldline" style="left:4.25in; border-color: rgba(0,0,0,.08)"></div>
+
+  <!-- página interior derecha -->
+  <div class="panel inside">
+    <div class="kick">Cómo funciona</div>
+    <h2>De la planilla al website en 3 pasos</h2>
+    <div class="rule"></div>
+
+    <div class="steps">
+      <div class="step"><div class="n">1</div><div><b>Crea tu liga y tus equipos</b><span>Rosters, divisiones y calendario generado solo — baseball u softball.</span></div></div>
+      <div class="step"><div class="n">2</div><div><b>Anota cada juego en vivo</b><span>Desde tu PC, con teclado rápido. El marcador, el boxscore y las decisiones se calculan solos.</span></div></div>
+      <div class="step"><div class="n">3</div><div><b>Publica el website de la liga</b><span>Portada con líderes y fotos, posiciones, bracket y perfil de cada jugador — sin escribir una sola página web.</span></div></div>
+    </div>
+
+    <div class="feat" style="margin-top:.18in"><div class="ic">📺</div><div><b>Vista pública en vivo</b><span>Comparte el link del juego y cualquiera sigue el marcador en tiempo real.</span></div></div>
+    <div class="feat"><div class="ic">👥</div><div><b>Multiusuario con roles</b><span>Admin, anotador y visita — o modo abierto para uso personal.</span></div></div>
+    <div class="feat"><div class="ic">💾</div><div><b>Tus datos son tuyos</b><span>Base local MySQL, respaldo automático y exportación completa en JSON/CSV.</span></div></div>
+
+    <div class="cta">
+      <b>La liga se anota una vez.<br>Las estadísticas nacen solas.</b>
+      <p>PoxScore reemplaza la planilla, la tabla en Excel y las páginas web hechas a mano.</p>
+      <span class="pill-w">PoxScore · 2026</span>
+    </div>
+
+    <div class="in-foot"><b>PoxScore</b> — Desarrollado por <b>Alexis Lara</b> · Béisbol y Softbol · 2026</div>
+  </div>
+</section>
+
+</body>
+</html>

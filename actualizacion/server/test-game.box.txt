@@ -1,0 +1,31 @@
+BallScore Box Score
+LIGA DE PRUEBA
+Octubre 10, 2026
+
+                          1  2  3  4  5  6  7   R  H  E
+TIGRES                    0  1  0  3  0  1  0   5  9  1
+AGUILAS                   2  0  0  0  0  0  x   2  5  0
+
+TIGRES Batting            AB  R  H RBI 2B 3B HR BB SO SB
+RIVERA, Pablo cf             4  2  3  1  1  0  0  0  1  0
+LARA, Pedro  1b              4  1  2  2  0  0  1  0  0  0
+PEREZ, Juan  ss              3  0  0  0  0  0  0  1  1  0
+Totals                      33  5  9  5  2  0  1  2  5  1
+
+TIGRES Pitching           IP  H  R ER BB SO HR
+RIVERA, Pablo (W)            7  5  2  1  1  6  0
+Totals                       7  5  2  1  1  6  0
+
+AGUILAS Batting           AB  R  H RBI 2B 3B HR BB SO SB
+PEREZ, Juan ss               3  1  1  0  0  0  0  1  0  0
+GOMEZ, Luis 1b               3  0  1  1  0  0  0  0  1  0
+Totals                      28  2  5  2  0  0  0  2  6  0
+
+AGUILAS Pitching          IP  H  R ER BB SO HR
+GOMEZ, Luis (L)            6.2  8  5  4  2  4  1
+Totals                       6.2  8  5  4  2  4  1
+
+TIGRES Fielding           PO  A  E
+RIVERA, Pablo                1  2  0
+LARA, Pedro                 10  1  0
+Totals                      21  8  1

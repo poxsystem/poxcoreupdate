@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>PoxScore — Manual del sistema</title>
+<style>
+  :root { --ink:#1e293b; --mut:#64748b; --acc:#15803d; --line:#e2e8f0; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem; line-height: 1.55; font-size: 10.5pt; }
+  h1 { font-size: 26pt; margin: 0; }
+  h2 { font-size: 15pt; border-bottom: 2px solid var(--acc); padding-bottom: 4px; margin-top: 2rem; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin-bottom: 4px; page-break-after: avoid; }
+  p { margin: 0.4rem 0; }
+  table { width: 100%; border-collapse: collapse; margin: 0.6rem 0; font-size: 9.5pt; page-break-inside: auto; }
+  th { background: #f1f5f9; text-align: left; }
+  th, td { border: 1px solid var(--line); padding: 4px 7px; }
+  kbd { display: inline-block; min-width: 1.4em; text-align: center; padding: 0.05em 0.45em; border: 1px solid #cbd5e1; border-bottom-width: 2px; border-radius: 5px; background: #f8fafc; font-weight: 700; font-size: 0.9em; }
+  code { background: #f1f5f9; padding: 0.1em 0.4em; border-radius: 4px; font-size: 9pt; }
+  .cover { text-align: center; padding: 6rem 0 4rem; page-break-after: always; }
+  .cover .logo { font-size: 46pt; font-weight: 800; letter-spacing: -1px; }
+  .cover .logo .ball { color: var(--acc); }
+  .cover .sub { font-size: 14pt; color: var(--mut); margin-top: 0.5rem; }
+  .cover .by { margin-top: 5rem; font-size: 11pt; color: var(--mut); }
+  .cover .by b { color: var(--ink); }
+  .toc { columns: 2; column-gap: 2.5rem; }
+  .toc a { display: block; color: var(--ink); text-decoration: none; padding: 3px 0; }
+  .toc a b { color: var(--acc); }
+  .note { background: #f0fdf4; border-left: 4px solid var(--acc); padding: 0.6rem 0.9rem; margin: 0.8rem 0; border-radius: 0 8px 8px 0; }
+  .warn { background: #fffbeb; border-left: 4px solid #d97706; padding: 0.6rem 0.9rem; margin: 0.8rem 0; border-radius: 0 8px 8px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
+  .pb { page-break-before: always; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--mut); font-size: 9pt; text-align: center; }
+  @media print {
+    body { padding: 0; max-width: none; }
+    .no-print { display: none !important; }
+    @page { margin: 1.6cm 1.8cm; }
+  }
+  .printbar { position: fixed; top: 0; left: 0; right: 0; background: #0f172a; color: #fff; padding: 0.6rem 1rem; text-align: center; z-index: 10; }
+  .printbar button { background: var(--acc); color: #fff; border: 0; border-radius: 8px; padding: 0.4rem 1.2rem; font-weight: 700; cursor: pointer; }
+  @media print { .printbar { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="printbar no-print">📄 Manual listo — <button onclick="window.print()">🖨 Imprimir / Guardar como PDF</button> (en el diálogo elige «Guardar como PDF»)</div>
+
+<!-- PORTADA -->
+<div class="cover">
+  <div class="logo">⚾ Pox<span class="ball">Score</span></div>
+  <div class="sub">Sistema de anotación y estadísticas de baseball y softball</div>
+  <div class="sub" style="font-size:10.5pt">Manual de usuario y administrador</div>
+  <div class="by">Desarrollado por <b>Alexis Lara</b> · 2026</div>
+</div>
+
+<!-- ÍNDICE -->
+<h2>Contenido</h2>
+<div class="toc">
+  <a href="#inst"><b>◆</b> Instalación paso a paso</a>
+  <a href="#s1"><b>1.</b> Introducción</a>
+  <a href="#s2"><b>2.</b> Primeros pasos</a>
+  <a href="#s3"><b>3.</b> Ligas y configuración</a>
+  <a href="#s4"><b>4.</b> Equipos y rosters</a>
+  <a href="#s5"><b>5.</b> Programación de juegos</a>
+  <a href="#s6"><b>6.</b> Anotar un juego</a>
+  <a href="#s7"><b>7.</b> Atajos de teclado</a>
+  <a href="#s8"><b>8.</b> Finalizar el juego</a>
+  <a href="#s9"><b>9.</b> Posiciones y estadísticas</a>
+  <a href="#s10"><b>10.</b> Playoffs</a>
+  <a href="#s11"><b>11.</b> Temporadas e historial</a>
+  <a href="#s12"><b>12.</b> Reportes y sitio web</a>
+  <a href="#s13"><b>13.</b> Respaldo de datos</a>
+  <a href="#s14"><b>14.</b> Usuarios y roles</a>
+  <a href="#s15"><b>15.</b> Compartir y exportar</a>
+</div>
+
+<h2 id="inst">Instalación paso a paso</h2>
+<p>Requisitos en la PC donde se instala: <b>Windows 10/11</b>, <b>Node.js 18+</b> (se recomienda 20+,
+de <code>nodejs.org</code>) y <b>MySQL Server 8</b> (o MariaDB) instalado y corriendo como servicio.</p>
+
+<h3>Paso 0 — Antes de empezar (una sola vez por PC)</h3>
+<ol>
+  <li>Instala <b>Node.js</b> desde <code>nodejs.org</code> (botón «LTS» → siguiente, siguiente). Al terminar abre una consola y escribe <code>node -v</code>: debe mostrar una versión.</li>
+  <li>Instala <b>MySQL Server</b> desde <code>dev.mysql.com/downloads/installer</code> (elige «Server only» es suficiente). Durante el asistente define la <b>contraseña del usuario root</b> — la necesitarás en el paso 4. Asegúrate de que quede como servicio de Windows («MySQL80»).</li>
+  <li>Copia la carpeta <code>distribucion</code> a la PC destino, por ejemplo a <code>C:\PoxScore</code>. <b>Descomprímela primero</b> si venía en ZIP — no instales desde dentro del ZIP.</li>
+</ol>
+
+<h3>Paso 1 — Abrir el instalador</h3>
+<ol>
+  <li>Entra a la carpeta copiada y haz <b>doble clic en <code>Instalar.bat</code></b>.</li>
+  <li>Se abre el asistente gráfico <b>PoxScore-Setup</b> (ventana con pasos). Si el PC no lo abre, el mismo .bat ejecuta el instalador de texto equivalente.</li>
+</ol>
+
+<h3>Paso 2 — Verificación de requisitos</h3>
+<ol>
+  <li>El asistente muestra si encuentra <b>Node.js</b>, <b>npm</b> y el <b>servicio MySQL</b>.</li>
+  <li>Si algo falta, el asistente lo indica — instálalo (paso 0) y vuelve a abrir <code>Instalar.bat</code>.</li>
+  <li>Pulsa <b>Siguiente / Continuar</b>.</li>
+</ol>
+
+<h3>Paso 3 — Credenciales de MySQL</h3>
+<ol>
+  <li>Servidor: <code>localhost</code> (déjalo así si MySQL está en esta misma PC).</li>
+  <li>Puerto: <code>3306</code> (el estándar).</li>
+  <li>Usuario: <code>root</code> (o el usuario que creaste en MySQL).</li>
+  <li>Contraseña: la de MySQL del paso 0 — se escribe oculta (asteriscos).</li>
+  <li>Nombre de la base de datos: <code>poxscore</code> (o el que prefieras — se crea sola).</li>
+  <li>Pulsa <b>«Probar conexión»</b>: debe decir que conectó. Si falla, revisa que el servicio MySQL esté iniciado y la contraseña sea correcta.</li>
+</ol>
+
+<h3>Paso 4 — Instalación automática</h3>
+<p>Al confirmar, el asistente ejecuta solo (verás el log avanzar):</p>
+<ol>
+  <li><b>Dependencias</b> del proyecto y del launcher (<code>npm install</code> — la primera vez tarda varios minutos, necesita internet).</li>
+  <li><b>Base de datos</b>: crea la base y todas las tablas (Prisma).</li>
+  <li><b>Aplicación web</b>: queda lista en <code>web\dist</code> (ya viene compilada en el paquete).</li>
+  <li><b>Acceso directo «PoxScore»</b> en el escritorio.</li>
+  <li>Opcional: <b>Liga Ejemplo</b> (6 equipos, 3 temporadas, playoffs) para practicar — responde <b>S</b> si la quieres, <b>N</b> si vas directo a tus datos.</li>
+</ol>
+
+<h3>Paso 5 — Terminar y abrir</h3>
+<ol>
+  <li>Al final pulsa <b>«Abrir PoxScore»</b> o cierra el asistente.</li>
+  <li>Queda un <b>icono PoxScore en la bandeja</b> del sistema (junto al reloj) y el navegador se abre en <code>http://localhost:4000</code>.</li>
+  <li><b>Listo:</b> sigue con la sección 2 «Primeros pasos» para crear tu liga.</li>
+</ol>
+
+<h3>Uso diario</h3>
+<table>
+  <tr><th>Para</th><th>Haz esto</th></tr>
+  <tr><td>Abrir PoxScore</td><td>Doble clic en el acceso del escritorio <b>PoxScore</b> (o <code>launcher\PoxScore.exe</code> → panel con Iniciar/Detener/Abrir navegador). <b>Solo abre UNA ventana</b> — si la app ya está abierta, «Abrir» la trae al frente en vez de duplicarla (para una segunda ventana a propósito — pantalla pública/OBS — usa «Abrir en otra ventana» en el menú del icono de bandeja). En el juego solo una pestaña puede anotar: si abres la anotación en otra ventana, la anterior se bloquea con aviso.</td></tr>
+  <tr><td>Desde otra PC de la red</td><td>Copia <code>launcher\PoxScore-Cliente.exe</code> y un <code>servidor.txt</code> al lado con la URL <code>http://IP-DEL-SERVIDOR:4000</code>.</td></tr>
+  <tr><td>Importar una liga BallStat</td><td>Ligas → <b>📥 Importar</b> → elige el <code>.rar</code>/<code>.zip</code> de la liga exportada de BallStat → vista previa → Importar.</td></tr>
+  <tr><td>Restaurar un respaldo en otra PC</td><td>El <code>.json</code> de Respaldo se carga por Ligas → <b>📥 Importar</b> (lo detecta solo: muestra «Respaldo PoxScore» en la vista previa) o por Respaldo → Importar. Inserta sin duplicar — seguro repetirlo.</td></tr>
+  <tr><td>Editar equipo</td><td>Liga → tab Equipos → <b>✏️</b> en la fila: nombre, abreviatura y <b>color del equipo</b> (punto de color junto al nombre en el listado).</td></tr>
+  <tr><td>Datos de ejemplo</td><td>Panel PoxScore.exe → botones «Datos ejemplo» / «Borrar ejemplo» (un solo uso, para practicar).</td></tr>
+  <tr><td>Respaldo</td><td>Dentro de la app → sección Respaldo (o <code>scripts\backup.ps1</code>). Hazlo periódicamente — los datos viven en MySQL local.</td></tr>
+</table>
+
+<div class="warn"><b>Si algo falla:</b> el error típico es MySQL detenido — <code>services.msc</code> → MySQL80 → Iniciar.
+Si el puerto 4000 está ocupado, cambia <code>PORT</code> en <code>server\.env</code>. Los logs del launcher están en <code>launcher\server.log</code>.</div>
+
+<h2 id="s1" class="pb">1. Introducción</h2>
+<p>PoxScore es el sucesor moderno de BallScore/BallStat: anota juegos de baseball y softball jugada por jugada
+(pitch a pitch), calcula automáticamente boxscores, planillas, estadísticas ofensivas, de pitcheo, de fildeo,
+situacionales y sabermétricas, administra ligas con posiciones, playoffs y temporadas, y mantiene el historial
+de por vida de cada jugador estilo Baseball-Reference.</p>
+<div class="note"><b>Principio central:</b> todo se deriva del stream de eventos del juego. Si algo se anota mal,
+«Deshacer» elimina la última jugada y todo el estado se recalcula solo — no hay correcciones manuales de estadísticas.</div>
+
+<h2 id="s2">2. Primeros pasos</h2>
+<ol>
+  <li><b>Ligas → Nueva liga</b>: nombre, año y deporte (baseball 9 entradas / softball 7).</li>
+  <li>Entra a la liga → <b>Equipos</b> → «Nuevo equipo» por cada participante.</li>
+  <li>Entra a cada equipo → arma el roster manualmente, por <b>importación TXT/CSV</b> o por <b>movimiento por lote</b> desde otro equipo.</li>
+  <li><b>Juegos</b> → programa juegos manualmente o genera el calendario completo con un clic.</li>
+  <li>Abre un juego → define alineaciones → «Iniciar juego» → anota desde la pantalla de anotación.</li>
+</ol>
+
+<h2 id="s3">3. Ligas y configuración</h2>
+<p>En la página de la liga (Ligas → nombre) se administran:</p>
+<table>
+  <tr><th>Opción</th><th>Qué hace</th></tr>
+  <tr><td>Entradas por juego</td><td>Entradas reglamentarias de la liga (vacío = 9 baseball / 7 softball). Aplica a juegos nuevos, calendario y series de playoff.</td></tr>
+  <tr><td>Reglas de clasificación</td><td>Mínimos de PA/juego (MLB 9.22: 3.1) e IP/juego (1.0) para líderes de promedio — aplican en la página de líderes, los cards de la portada del website y los líderes de la app. 0 = sin mínimo. Incluye la excepción oficial de relleno (quien no llega al mínimo pero seguiría liderando aun con turnos sin hit, clasifica).</td></tr>
+  <tr><td>Clasifican / Rondas</td><td>En el tab 🏆 Playoffs: cuántos equipos pasan a postemporada y en cuántas rondas.</td></tr>
+  <tr><td>🗓 Nueva temporada</td><td>Crea la liga del año siguiente clonando equipos y arrastrando rosters activos (los jugadores conservan su ID e historial).</td></tr>
+  <tr><td>🌐 Website / ⬇ Descargar</td><td>Sitio estático completo de la liga en un solo HTML (standings, líderes, records, boxscores, jugadores) — incluye <b>buscador de jugadores 🔎</b> en el menú, <b>bracket visual de playoffs</b>, <b>comparador de jugadores ⚖️</b> (por carrera o por año) y <b>fotos de líderes</b> (iniciales si el jugador no tiene foto). Todo funciona sin servidor.</td></tr>
+  <tr><td>✏️ Editar</td><td>Corrige el nombre/año de la liga sin tocar equipos, juegos ni stats.</td></tr>
+  <tr><td>🖨 Imprimir reporte</td><td>Reporte imprimible del torneo: posiciones, totales por equipo, líderes y tablas completas.</td></tr>
+</table>
+
+<h2 id="s4">4. Equipos y rosters</h2>
+<ul>
+  <li><b>Alta manual</b>: número, nombre, apellido, batea/tira, posiciones, foto (📷).</li>
+  <li><b>Importar CSV/TXT</b>: pega o sube un archivo. Formato simple: <code>Nombre,Apellido,POS</code> (ej. <code>Alexis,Lara,SS</code>; varias posiciones separadas por comas). También acepta el CSV completo <code>numero,nombre,apellido,batea,tira,posiciones</code>. Omite encabezados y duplicados.</li>
+  <li><b>Mover por lote</b>: checkboxes en el roster → «Mover N →» al equipo destino (distingue equipos homónimos por liga/año). El jugador conserva su ID → todo su historial lo sigue.</li>
+  <li><b>Baja/alta</b>: desactivar un jugador no borra su historial.</li>
+  <li><b>✏️ Editar</b>: corrige nombre/abreviatura del equipo (botón junto al nombre) y nombre, apellido, #, batea/tira y posiciones de cada jugador (✏️ en el roster).</li>
+  <li><b>Desde la tarjeta del jugador</b>: «✏️ Editar stats» (bateo/pitcheo/fildeo de la temporada), «↔ Cambiar equipo» y «⛔ Dar de baja / ✓ Reactivar».</li>
+  <li><b>Plantilla de alineación</b>: guarda/carga el orden típico del equipo (📂/💾 en el constructor de lineup).</li>
+</ul>
+
+<h2 id="s5">5. Programación de juegos</h2>
+<p><b>Manual:</b> Liga → Juegos → «Programar juego» (visitante, local, entradas). La liga asigna deporte y entradas por defecto.</p>
+<p><b>Calendario automático:</b> «📅 Calendario automático» genera un round-robin por jornadas: todos contra todos,
+alternando localía cada vuelta. Parámetros: fecha de la 1ª jornada, número de vueltas y días entre jornadas.
+Con N equipos impares, un equipo descansa por jornada. «🗑 Borrar programados» elimina solo juegos sin iniciar (los jugados/finalizados jamás se tocan).</p>
+<p><b>Doble jornada:</b> cuando un equipo juega dos veces el mismo día, su segundo juego se marca con un superíndice <code>J2</code> (tercero = <code>J3</code>) en el listado de juegos — así se distingue cuál partido fue el segundo de ese equipo.</p>
+
+<h2 id="s6" class="pb">6. Anotar un juego</h2>
+<p>La pantalla de anotación (<b>En Acción</b> o desde el juego → Anotar) muestra: linescore en vivo, diamante con
+corredores, conteo B-S, paneles del bateador y lanzador (JOGO = este juego, TEMP = temporada + hoy en vivo), planilla
+estilo BallScore y los botones de jugada.</p>
+<h3>Flujo del turno</h3>
+<ol>
+  <li>Anota el conteo pitch a pitch (Bola / Strike / Foul) — el marcador B-S se actualiza.</li>
+  <li>Cierra el turno con el resultado: HIT / OUT / EN BASE. Se abre la pantalla de avances.</li>
+  <li>En avances, ajusta cada corredor a su base final (los valores típicos vienen precargados) y marca la notación defensiva (6-3, F8, E5…) para el fildeo.</li>
+</ol>
+<h3>Herramientas durante el juego</h3>
+<table>
+  <tr><th>Herramienta</th><th>Qué hace</th></tr>
+  <tr><td>🔍 Consulta (Shift+I)</td><td>Tarjeta del turno: temporada, situacional (RISP/llenas/2 outs/leadoff), historial vs ese lanzador y últimos 3 enfrentamientos. Botón «Ver lanzador» muestra su espejo.</td></tr>
+  <tr><td>Resumen (Shift+L)</td><td>Líneas de todos los jugadores del juego.</td></tr>
+  <tr><td>⇄ Sustitución</td><td>Cambio de bateador, corredor, lanzador o defensa — conserva el lugar en el orden. Al pie de la ventana, «↩ Deshacer un cambio» lista las sustituciones hechas y permite revertirlas (vuelve el que salió y sale el que entró por error).</td></tr>
+  <tr><td>⚙ Especial</td><td>Terminar entrada, ajustar corredores/outs, cambiar lados, merecida↔inmerecida, jugador que salió del juego, etc.</td></tr>
+  <tr><td>↩ Deshacer (U)</td><td>Elimina la última jugada y recalcula todo.</td></tr>
+  <tr><td>↩ Jugadas…</td><td>Lista todas las jugadas del juego; «borrar desde aquí» elimina la elegida y todas las posteriores — para corregir errores de anotación que vienen de varias jugadas atrás.</td></tr>
+  <tr><td>Jugadas de corredores</td><td>SB, CS, WP, PB, BK, balk, ilegal (IPL), sale temprano (LE), corredor fantasma 👻.</td></tr>
+</table>
+
+<h2 id="s7">7. Atajos de teclado</h2>
+<p>Activos solo con el juego en vivo y sin ventana abierta (no aplican al escribir en campos). <kbd>?</kbd> o el botón <kbd>⌨</kbd> muestran esta lista dentro del juego.</p>
+<div class="grid2">
+  <table>
+    <tr><th>Tecla</th><th>Acción</th></tr>
+    <tr><td><kbd>B</kbd></td><td>Bola</td></tr>
+    <tr><td><kbd>S</kbd></td><td>Strike</td></tr>
+    <tr><td><kbd>F</kbd></td><td>Foul</td></tr>
+    <tr><td><kbd>K</kbd></td><td>Ponche</td></tr>
+    <tr><td><kbd>W</kbd></td><td>Base por bolas</td></tr>
+    <tr><td><kbd>I</kbd></td><td>Base intencional</td></tr>
+    <tr><td><kbd>P</kbd></td><td>Golpeado (HBP)</td></tr>
+    <tr><td><kbd>E</kbd></td><td>Error</td></tr>
+    <tr><td><kbd>X</kbd></td><td>Jugada de selección (FC)</td></tr>
+    <tr><td><kbd>A</kbd></td><td>Robo de base (SB)</td></tr>
+    <tr><td><kbd>C</kbd></td><td>Atrapado robando (CS)</td></tr>
+  </table>
+  <table>
+    <tr><th>Tecla</th><th>Acción</th></tr>
+    <tr><td><kbd>1</kbd></td><td>Sencillo</td></tr>
+    <tr><td><kbd>2</kbd></td><td>Doble</td></tr>
+    <tr><td><kbd>3</kbd></td><td>Triple</td></tr>
+    <tr><td><kbd>4</kbd>/<kbd>H</kbd></td><td>Jonrón</td></tr>
+    <tr><td><kbd>R</kbd></td><td>Rola (GO)</td></tr>
+    <tr><td><kbd>V</kbd></td><td>Elevado (FO)</td></tr>
+    <tr><td><kbd>L</kbd></td><td>Línea (LO)</td></tr>
+    <tr><td><kbd>D</kbd></td><td>Doble play</td></tr>
+    <tr><td><kbd>T</kbd></td><td>Sacrificio (SAC)</td></tr>
+    <tr><td><kbd>Y</kbd></td><td>Fly de sacrificio (SF)</td></tr>
+    <tr><td><kbd>U</kbd></td><td>Deshacer última jugada</td></tr>
+  </table>
+</div>
+<table>
+  <tr><td><kbd>Shift</kbd>+<kbd>I</kbd></td><td>Consulta del turno (bateador vs lanzador)</td>
+      <td><kbd>Shift</kbd>+<kbd>L</kbd></td><td>Resumen del juego</td>
+      <td><kbd>Esc</kbd></td><td>Cerrar ventana / cancelar</td></tr>
+</table>
+
+<h2 id="s8">8. Finalizar el juego</h2>
+<p>Al completarse las entradas reglamentarias con ventaja (o walk-off), el juego se marca FINAL solo y se abre la
+pantalla de <b>decisiones</b>: ganador (WP), perdedor (LP), salvamento (SV), holds (HLD), juegos salvados desperdiciados
+(BS) — con sugerencias automáticas. CG y SHO se detectan solos.</p>
+<ul>
+  <li><b>Empate:</b> marca «empatado» — sin W/L en posiciones.</li>
+  <li><b>Forfeit:</b> marcador oficial = 1 carrera por entrada reglamentaria, salvo que el perjudicado ya iba ganando (queda el real). Las estadísticas jugadas sí cuentan.</li>
+  <li><b>Suspendido:</b> conserva todos los eventos y se reanuda después; no acumula temporada hasta finalizar.</li>
+</ul>
+
+<h2 id="s9">9. Posiciones y estadísticas</h2>
+<h3>Posiciones (tab Posiciones)</h3>
+<p>Tabla completa: G-P-E, PCT, juegos detrás (JB), carreras a favor/en contra, diferencial, <b>racha</b> (G3/P2/E1),
+<b>últimos 10</b> juegos, <b>forma</b> de los últimos 5 (puntos verde/rojo/gris) y la <b>matriz cara a cara</b> —
+el registro de cada pareja de equipos entre sí. Los clasificados a playoff se sombrean en verde con 🏆.</p>
+<h3>Estadísticas del torneo (tab Estadísticas)</h3>
+<table>
+  <tr><th>Sección</th><th>Columnas</th></tr>
+  <tr><td>Bateo</td><td>G, AB, R, H, 2B, 3B, HR, CI, BB, K, BR + AVG, OBP, SLG, OPS, ISO, BABIP</td></tr>
+  <tr><td>Pitcheo</td><td>G, GI (iniciados), W, L, SV, HLD, BS, CG, SHO, IP, H, C, CL, BB, K, HR, Pit + ERA, WHIP, K/9, BB/9</td></tr>
+  <tr><td>Fildeo</td><td>PO, A, E, TC, FPCT — derivado de la notación defensiva (6-4-3, F8, E5…)</td></tr>
+  <tr><td>Situacional</td><td>Corredores en posición de anotar, bases llenas, con 2 outs, abriendo entrada</td></tr>
+  <tr><td>⏱ Tiempo/Rachas</td><td>Splits por mes, últimos 4/6/10 juegos, rachas de hits/embase/ponches/sequía</td></tr>
+  <tr><td>Sabermetría (sitio web)</td><td>wOBA, wRAA, WAR* estimado, FIP — escala derivada de la propia liga</td></tr>
+  <tr><td>Records (sitio web)</td><td>Mejores/peores juegos de equipo y marcas individuales en un juego</td></tr>
+  <tr><td>Matchups</td><td>Bateador vs cada lanzador (y viceversa), jugador vs equipos, equipo vs equipo</td></tr>
+</table>
+<div class="note">Regular y 🏆 Playoffs se contabilizan por separado — el toggle del tab Estadísticas cambia entre ambos.</div>
+
+<h2 id="s10" class="pb">10. Playoffs</h2>
+<p>Tab 🏆 Playoffs de la liga:</p>
+<ol>
+  <li><b>Configura</b> cuántos clasifican y cuántas rondas (semifinal+final, etc.).</li>
+  <li><b>Pareos:</b> manual (eliges local/visitante y «gana con N victorias»: 3 = al mejor de 5, 4 = mejor de 7) o
+      <b>🎲 automáticos</b> por posición (1° vs último, 2° vs penúltimo…). Con número impar de clasificados, el que sobra queda <b>sentado</b> automáticamente.</li>
+  <li><b>Sentados:</b> checkboxes por ronda — esperan rival en la siguiente.</li>
+  <li><b>Series:</b> cada tarjeta muestra el record, sus juegos y «＋ Juego N» para crear el siguiente juego ya vinculado.</li>
+  <li><b>Avance:</b> al llegar a las victorias necesarias el ganador se sella y pasa al pool de la siguiente ronda junto con los sentados. Los eliminados quedan listados.</li>
+</ol>
+
+<h2 id="s11">11. Temporadas e historial de por vida</h2>
+<ul>
+  <li><b>🗓 Nueva temporada</b> clona la liga al año nuevo con equipos y rosters activos. Solo reorganizas con el movimiento por lote.</li>
+  <li>Cada jugador guarda su <b>historial completo por temporada</b>: en su tarjeta, tab «Por torneo» muestra
+      <code>Equipos: A → B → C</code> cuando se movió, con tabla de stints por equipo + fila TOT; tab «Por año» resume cada temporada; el log juego a juego marca el equipo usado en cada partido.</li>
+  <li>Los bloques de <b>postemporada</b> aparecen separados dentro de cada torneo.</li>
+  <li><b>🔀 Fusionar jugadores</b> (menú): para duplicados — típico al importar ligas donde un mismo pelotero quedó con una ficha por equipo. Se elige la <b>liga que administras</b> (solo salen sus jugadores) y aparece la tabla «Posibles duplicados»: nombres con más de una ficha. La <b>fusión por lotes</b> permite elegir cuál ficha queda y marcar las demás — todas se borran y sus números se suman de una vez. Debajo queda la fusión manual de a dos.</li>
+</ul>
+
+<h2 id="s12">12. Reportes y sitio web</h2>
+<ul>
+  <li><b>Reporte del torneo</b> (tab Reporte): resultados, posiciones, totales por equipo, líderes por categoría, MVP, tablas completas — imprimible.</li>
+  <li><b>🏆 MVP automático</b>: el reporte «MVP de la temporada» calcula el jugador más valioso sin elección manual — <b>Puntos = WAR* ofensivo + WAR* de pitcheo ×0.75 + tinta ×0.25</b> (la tinta topea en 3.0; el WAR de pitcheo se descuenta como hacen los votantes de MLB — el as que lanza todos los juegos acumula WAR más rápido). La <b>tinta</b> pesa los lideratos estilo MLB (Black Ink): <b>4 pts</b> por liderar AVG·HR·CI·G·ERA·K, <b>3 pts</b> R·H·SLG·OPS·IP·SV, <b>2 pts</b> 2B·OBP·BB·BR·WHIP·CG y <b>1 pt</b> 3B·HLD·SHO. Los empates cuentan para todos los líderes (co-líderes, como en MLB). La tabla de candidatos muestra el desglose: WAR ofensivo, WAR de pitcheo, puntos de tinta y los departamentos que cada uno lidera.</li>
+  <li><b>Sitio web estático</b>: un solo HTML navegable (portada, standings extendidos, equipo, jugador, boxscore con pitcheo por equipo + decisiones y recap, líderes, records, matchups) — súbelo a cualquier hosting o compártelo directo.</li>
+  <li><b>Reportes por juego</b>: compuesto, situaciones y vs rival — imprimibles desde la página del juego.</li>
+</ul>
+
+<h2 id="s13">13. Respaldo de datos</h2>
+<ul>
+  <li>Menú <b>Respaldo</b> — tres opciones:
+    <ul>
+      <li><b>⬇ Respaldo completo</b>: toda la base de datos en un solo archivo <code>.json</code> — ligas, temporadas, equipos, series de playoff, jugadores, juegos, alineaciones, eventos jugada a jugada y acumulados de temporada (incluye las correcciones hechas con ✏️).</li>
+      <li><b>Respaldo por liga</b>: elige la liga en el selector y pulsa <b>⬇ Respaldo de liga</b> — mismo formato pero solo esa liga (útil para pasar una liga a otra PC o reinstalarla sola).</li>
+      <li><b>Restaurar</b>: elige un archivo <code>.json</code> exportado y pulsa <b>⬆ Restaurar</b> — inserta los datos respetando los IDs; los registros que ya existen se omiten (no duplica ni borra lo que ya está).</li>
+    </ul>
+  </li>
+  <li>Recomendado: respaldo completo al cerrar cada jornada y al final de la temporada (antes del rollover).</li>
+  <li><b>Respaldo automático a disco</b>: el servidor guarda solo un respaldo JSON en <code>server\backups\</code> — al arrancar, cada 6 horas y cada vez que cierra un juego. Conserva los últimos 30 (rotación). En la página Respaldo se ven los archivos y hay botón «⬇ Respaldar ahora».</li>
+  <li>También hay respaldo de nivel base de datos: <code>scripts\backup.ps1</code> (mysqldump).</li>
+  <li>⚠ Si restauras un respaldo de liga en una base que ya la tiene, los datos existentes quedan como estaban (no se sobreescriben) — para reinstalar una liga desde cero, bórrala primero.</li>
+</ul>
+
+<h2 id="s14">14. Usuarios y roles</h2>
+<ul>
+  <li>Menú <b>👥</b> → crear usuarios. <b>Mientras no haya ninguno, la suite queda abierta</b> (modo local de una sola PC).</li>
+  <li>Al crear el primer usuario (hazlo <b>admin</b>), las escrituras piden sesión:
+    <ul>
+      <li><b>admin</b>: todo — ligas, equipos, jugadores, usuarios, respaldo, publicación, importar.</li>
+      <li><b>anotador</b>: anotar y administrar juegos (alineaciones, jugadas, cerrar juego).</li>
+      <li><b>visita</b>: solo lectura.</li>
+    </ul>
+  </li>
+  <li>La lectura (ver tablas, boxscores, estadísticas) nunca pide clave — ideal para que el público consulte.</li>
+  <li>Borrar el último usuario devuelve la suite al modo abierto. El botón 👤 del menú inicia/cierra sesión.</li>
+</ul>
+
+<h2 id="s15">15. Compartir y exportar</h2>
+<ul>
+  <li><b>🔗 Vista en vivo</b>: en la página del juego — copia un link público (<code>/en-vivo/…</code>) de solo lectura que se actualiza solo cada 10 s. Compártelo por WhatsApp para que cualquiera siga el marcador.</li>
+  <li><b>📤 Tarjeta</b>: descarga una imagen PNG del resultado (marcador + destacados) lista para redes sociales.</li>
+  <li><b>📊 CSV</b>: en Posiciones y en cada tabla de Estadísticas — descarga la tabla para Excel (separador «;», acentos correctos).</li>
+  <li><b>📄 Imprimir / PDF</b>: el reporte de liga abre el diálogo de impresión — elige «Guardar como PDF» para un PDF oficial.</li>
+  <li><b>🖨 Alineación</b>: tarjeta de alineación imprimible para entregar al umpire (orden, posiciones, banca, ampáyers).</li>
+  <li><b>⚖️ Comparar</b>: menú ⚖️ — dos jugadores lado a lado; selector de <b>carrera o año específico</b>; la barra verde marca quién gana cada categoría.</li>
+  <li><b>🏆 Playoffs</b>: el tab muestra el bracket visual por rondas (ganador en verde, sentados marcados).</li>
+  <li><b>Desempate</b>: ✏️ Editar en la liga → regla de desempate (porcentaje / cara a cara / diferencia de carreras).</li>
+</ul>
+
+<footer>
+  <b>PoxScore</b> — Sistema de anotación y estadísticas de baseball y softball<br>
+  Desarrollado por <b>Alexis Lara</b> · 2026
+</footer>
+
+</body>
+</html>
